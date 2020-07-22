@@ -1,0 +1,2 @@
+[submodule "thirdparty/rlottie"]
+	url = https://github.com/Samsung/rlottie.git
