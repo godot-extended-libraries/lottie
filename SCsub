@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+Import('env')
+Import('env_modules')
+
+env_lottie = env_modules.Clone()
+
+env_lottie.Prepend(CPPPATH=['.'])
+env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/inc'])
+env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/lottie'])
+env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector'])
+env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/freetype'])
+
+env_lottie.Append(CCDEFINES=["LOT_BUILD"])
+env_lottie.Append(CPPDEFINES=["LOT_BUILD"])
+
+env_thirdparty = env_lottie.Clone()
+# env_thirdparty.disable_warnings()
+env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/lottie/*.cpp")
+env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/*.cpp")
+env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
+env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
+
+env_lottie.add_source_files(env.modules_sources, "*.cpp")
