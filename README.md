@@ -2,4 +2,4 @@
 
 Proof of concept.
 
-Currently LGP but relicensing to MIT. https://github.com/Samsung/rlottie/issues/353#issuecomment-669884676
+Currently LGPL but relicensing to MIT. https://github.com/Samsung/rlottie/issues/353#issuecomment-669884676
