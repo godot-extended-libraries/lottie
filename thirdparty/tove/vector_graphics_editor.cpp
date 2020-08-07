@@ -400,7 +400,7 @@ public:
 
 	virtual void forward_canvas_draw_over_viewport(Control *p_overlay) {
 		Transform2D xform = canvas_item_editor->get_canvas_transform() * path->get_global_transform();
-		const Ref<Texture2D> handle = vg_editor->get_theme_icon("EditorHandle", "EditorIcons");
+		const Ref<Texture> handle = vg_editor->get_icon("EditorHandle", "EditorIcons");
 		Control *vpc = canvas_item_editor->get_viewport_control();
 		
 		Pos4 p;
@@ -829,7 +829,7 @@ public:
 
 		if (k.is_valid() && k->is_pressed()) {
 
-			if (k->get_physical_keycode() == KEY_DELETE || k->get_physical_keycode() == KEY_BACKSPACE) {
+			if (k->get_scancode() == KEY_DELETE || k->get_scancode() == KEY_BACKSPACE) {
 
 				const Vertex active_point = get_active_point();
 
@@ -849,7 +849,7 @@ public:
 		Control *vpc = canvas_item_editor->get_viewport_control();
 		Transform2D xform = canvas_item_editor->get_canvas_transform() *
 			_get_node()->get_global_transform();
-		const Ref<Texture2D> handle = vg_editor->get_theme_icon("EditorHandle", "EditorIcons");
+		const Ref<Texture> handle = vg_editor->get_icon("EditorHandle", "EditorIcons");
 
 		const tove::PathRef path = node_vg->get_tove_path();
 
@@ -1109,14 +1109,14 @@ void VGEditor::_notification(int p_what) {
 
 		case NOTIFICATION_READY: {
 
-			buttons[0]->set_icon(EditorNode::get_singleton()->get_gui_base()->get_theme_icon("ToolSelect", "EditorIcons"));
-			buttons[1]->set_icon(EditorNode::get_singleton()->get_gui_base()->get_theme_icon("EditBezier", "EditorIcons"));
+			buttons[0]->set_icon(EditorNode::get_singleton()->get_gui_base()->get_icon("ToolSelect", "EditorIcons"));
+			buttons[1]->set_icon(EditorNode::get_singleton()->get_gui_base()->get_icon("EditBezier", "EditorIcons"));
 
-			button_bake->set_icon(EditorNode::get_singleton()->get_gui_base()->get_theme_icon("MeshInstance2D", "EditorIcons"));			
+			button_bake->set_icon(EditorNode::get_singleton()->get_gui_base()->get_icon("MeshInstance2D", "EditorIcons"));			
 
-			get_tree()->connect_compat("node_removed", this, "_node_removed");
+			get_tree()->connect("node_removed", this, "_node_removed");
 
-			create_resource->connect_compat("confirmed", this, "_create_resource");
+			create_resource->connect("confirmed", this, "_create_resource");
 
 		} break;
 		case NOTIFICATION_PHYSICS_PROCESS: {
@@ -1309,7 +1309,7 @@ void VGEditor::forward_canvas_draw_over_viewport(Control *p_overlay) {
 	Control *vpc = canvas_item_editor->get_viewport_control();
 	/* Transform2D xform = canvas_item_editor->get_canvas_transform() *
 		_get_node()->get_global_transform(); */
-	const Ref<Texture2D> handle = get_theme_icon("EditorHandle", "EditorIcons");
+	const Ref<Texture> handle = get_icon("EditorHandle", "EditorIcons");
 
 	_update_overlay();
 	if (overlay.is_valid()) {
@@ -1574,7 +1574,7 @@ VGEditor::VGEditor(EditorNode *p_editor) {
 	for (int i = 0; i < n_tools; i++) {
 		Button *button = memnew(Button);
 		add_child(button);
-		button->connect_compat("pressed", this, "_tool_selected", varray(i));
+		button->connect("pressed", this, "_tool_selected", varray(i));
 		button->set_toggle_mode(true);
 		button->set_pressed(i == 0);
 		buttons.push_back(button);
@@ -1586,7 +1586,7 @@ VGEditor::VGEditor(EditorNode *p_editor) {
 
 	button_bake = memnew(Button);
 	add_child(button_bake);
-	button_bake->connect_compat("pressed", this, "_create_mesh_node");
+	button_bake->connect("pressed", this, "_create_mesh_node");
 	button_bake->set_tooltip(TTR("Bake into mesh"));
 
 	create_resource = memnew(ConfirmationDialog);

@@ -17,7 +17,7 @@ void VGRadialGradient::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "center"), "set_center", "get_center");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "focal"), "set_focal", "get_focal");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "radius"), "set_radius", "get_radius");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "radius"), "set_radius", "get_radius");
 }
 
 VGRadialGradient::VGRadialGradient() {

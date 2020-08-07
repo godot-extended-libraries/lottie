@@ -5,7 +5,7 @@
 #include "vector_graphics_path.h"
 #include "core/os/file_access.h"
 #include "editor/editor_node.h"
-#include "scene/2d/sprite_2d.h"
+#include "scene/2d/sprite.h"
 #include "vector_graphics_color.h"
 #include "vector_graphics_linear_gradient.h"
 #include "vector_graphics_radial_gradient.h"
@@ -383,7 +383,7 @@ void VGPath::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "renderer", PROPERTY_HINT_RESOURCE_TYPE, "VGRenderer"), "set_renderer", "get_renderer");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "fill_color", PROPERTY_HINT_RESOURCE_TYPE, "VGPaint"), "set_fill_color", "get_fill_color");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "line_color", PROPERTY_HINT_RESOURCE_TYPE, "VGPaint"), "set_line_color", "get_line_color");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "line_width", PROPERTY_HINT_RANGE, "0,100,0.01"), "set_line_width", "get_line_width");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "line_width", PROPERTY_HINT_RANGE, "0,100,0.01"), "set_line_width", "get_line_width");
 
 	ClassDB::bind_method(D_METHOD("insert_curve", "subpath", "t"), &VGPath::insert_curve);
 	ClassDB::bind_method(D_METHOD("remove_curve", "subpath", "curve"), &VGPath::remove_curve);
@@ -428,7 +428,7 @@ bool VGPath::_set(const StringName &p_name, const Variant &p_value) {
 		if (subwhat == "closed") {
 			tove_subpath->setIsClosed(p_value);
 		} if (subwhat == "points") {
-			PackedVector2Array pts = p_value;
+			PoolVector2Array pts = p_value;
 			const int n = pts.size();
 			float *buf = new float[n * 2];
 			for (int i = 0; i < n; i++) {
@@ -476,12 +476,13 @@ bool VGPath::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = tove_subpath->isClosed();
 		} else if (subwhat == "points") {
 			const int n = tove_subpath->getNumPoints();
-			PackedVector2Array out;
+			PoolVector2Array out;
 			out.resize(n);
 			{
 				const float *pts = tove_subpath->getPoints();
+				PoolVector2Array::Write out_write = out.write();
 				for (int i = 0; i < n; i++) {
-					out.write[i] = Vector2(pts[2 * i + 0], pts[2 * i + 1]);
+					out_write[i] = Vector2(pts[2 * i + 0], pts[2 * i + 1]);
 				}
 			}
 			r_ret = out;
@@ -498,14 +499,14 @@ bool VGPath::_get(const StringName &p_name, Variant &r_ret) const {
 void VGPath::_get_property_list(List<PropertyInfo> *p_list) const {
 
 	p_list->push_back(PropertyInfo(Variant::STRING, "name", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
-	p_list->push_back(PropertyInfo(Variant::FLOAT, "line_width", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
+	p_list->push_back(PropertyInfo(Variant::REAL, "line_width", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 	p_list->push_back(PropertyInfo(Variant::INT, "fill_rule", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 
 	for (int j = 0; j < tove_path->getNumSubpaths(); j++) {
 		const String subpath_prefix = "subpaths/" + itos(j);
 
 		p_list->push_back(PropertyInfo(Variant::BOOL, subpath_prefix + "/closed", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
-		p_list->push_back(PropertyInfo(Variant::PACKED_VECTOR2_ARRAY, subpath_prefix + "/points", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));			
+		p_list->push_back(PropertyInfo(Variant::POOL_VECTOR2_ARRAY, subpath_prefix + "/points", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));			
 	}
 }
 
@@ -516,11 +517,11 @@ Ref<VGRenderer> VGPath::get_renderer() {
 void VGPath::set_renderer(const Ref<VGRenderer> &p_renderer) {
 
 	if (renderer.is_valid()) {
-		renderer->disconnect_compat("changed", this, "_renderer_changed");		
+		renderer->disconnect("changed", this, "_renderer_changed");		
 	}
 	renderer = p_renderer;
 	if (renderer.is_valid()) {
-		renderer->connect_compat("changed", this, "_renderer_changed");
+		renderer->connect("changed", this, "_renderer_changed");
 	}
 
 	set_inherited_dirty(this);
@@ -725,7 +726,7 @@ Node2D *VGPath::create_mesh_node() {
 	Ref<VGRenderer> renderer = get_inherited_renderer();
 	if (renderer.is_valid()) {
 		if (renderer->prefer_sprite()) {
-			Sprite2D *sprite = memnew(Sprite2D);
+			Sprite *sprite = memnew(Sprite);
 			sprite->set_texture(renderer->render_texture(this, true));
 
 			//Size2 s = get_global_transform().get_scale();
@@ -831,7 +832,7 @@ Node *createVectorSprite(Ref<Resource> p_resource) {
 	if (path) {
 		return path;
 	} else {
-		return memnew(Sprite2D); // not a vector file
+		return memnew(Sprite); // not a vector file
 	}
 }
 

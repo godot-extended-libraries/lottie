@@ -30,5 +30,5 @@ void VGMeshRenderer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_quality", "quality"), &VGMeshRenderer::set_quality);
 	ClassDB::bind_method(D_METHOD("get_quality"), &VGMeshRenderer::get_quality);
 
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
 }

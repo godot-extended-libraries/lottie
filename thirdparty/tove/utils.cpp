@@ -96,16 +96,17 @@ Ref<ShaderMaterial> copy_mesh(
 			arguments_data.write[i] = 0.0f;
 		}
 
-		Vector<uint8_t> pixels;
+		PoolVector<uint8_t> pixels;
 		ERR_FAIL_COND_V(pixels.resize(npaints * 4 * alloc.numColors) != OK, Ref<ShaderMaterial>());
 
 		ToveGradientData gradientData;
-		memset(pixels.ptrw(), 0, npaints * 4 * alloc.numColors);
+		PoolVector<uint8_t>::Write pixel_write = pixels.write();
+		memset(pixel_write.ptr(), 0, npaints * 4 * alloc.numColors);
 
 		gradientData.matrix = matrix_data.ptrw();
 		gradientData.matrixRows = matrix_rows;
 		gradientData.arguments = arguments_data.ptrw();
-		gradientData.colorsTexture = pixels.ptrw();
+		gradientData.colorsTexture = pixel_write.ptr();
 		gradientData.colorsTextureRowBytes = npaints * 4;
 		gradientData.colorsTextureHeight = alloc.numColors;
 
@@ -293,7 +294,7 @@ void fragment()
 		arr[Mesh::ARRAY_COLOR] = carr;
 	}
 	if (uvs.size() > 0) {
-		arr[RS::ARRAY_TEX_UV] = uvs;
+		arr[VS::ARRAY_TEX_UV] = uvs;
 	}
 
 	Ref<SurfaceTool> surface_tool;

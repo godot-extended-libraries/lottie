@@ -18,14 +18,15 @@ static Ref<Image> tove_graphics_rasterize(
 	const int w = p_width;
 	const int h = p_height;
 
-	Vector<uint8_t> dst_image;
+	PoolVector<uint8_t> dst_image;
 	ERR_FAIL_COND_V(dst_image.resize(w * h * 4) != OK, Ref<Image>());
 
 	const ToveRasterizeSettings *defaultSettings = tove::nsvg::getDefaultRasterizeSettings();
 	if (defaultSettings) {
 		ToveRasterizeSettings settings = *defaultSettings;
 		settings.quality = p_hq ? 1 : 0;
-		p_tove_graphics->rasterize(&dst_image.write[0], p_width, p_height, w * 4, p_tx, p_ty, p_scale, &settings);
+		PoolVector<uint8_t>::Write dst_image_write = dst_image.write();
+		p_tove_graphics->rasterize(&dst_image_write[0], p_width, p_height, w * 4, p_tx, p_ty, p_scale, &settings);
 	}
 
 
@@ -52,7 +53,7 @@ void VGSpriteRenderer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_quality", "quality"), &VGSpriteRenderer::set_quality);
 	ClassDB::bind_method(D_METHOD("get_quality"), &VGSpriteRenderer::get_quality);
 
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
 }
 
 Rect2 VGSpriteRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, Ref<Material> &r_material, Ref<Texture> &r_texture, VGPath *p_path, bool p_hq, bool p_spatial) {
@@ -112,10 +113,10 @@ Rect2 VGSpriteRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, Ref<Material> &r_mat
     Array arr;
     ERR_FAIL_COND_V(arr.resize(Mesh::ARRAY_MAX), Rect2());
 
-	arr[RS::ARRAY_VERTEX] = faces;
-	arr[RS::ARRAY_NORMAL] = normals;
-	arr[RS::ARRAY_TANGENT] = tangents;
-	arr[RS::ARRAY_TEX_UV] = uvs;
+	arr[VS::ARRAY_VERTEX] = faces;
+	arr[VS::ARRAY_NORMAL] = normals;
+	arr[VS::ARRAY_TANGENT] = tangents;
+	arr[VS::ARRAY_TEX_UV] = uvs;
 
 	clear_mesh(p_mesh);
 	p_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
