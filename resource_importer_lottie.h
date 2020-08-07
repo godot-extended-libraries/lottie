@@ -13,9 +13,12 @@
 #include "scene/resources/primitive_meshes.h"
 
 #include "thirdparty/rlottie/inc/rlottie.h"
+#include "thirdparty/rlottie/inc/rlottiecommon.h"
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
+	void _visit_render_node(const LOTLayerNode *layer);
+	void _visit_layer_node(const LOTLayerNode *layer);
 
 public:
 	virtual String get_importer_name() const;
@@ -41,6 +44,153 @@ public:
 	ResourceImporterLottie();
 	~ResourceImporterLottie();
 };
+
+/*
+   The LayerNode can contain list of child layer node
+   or a list of render node which will be having the 
+   path and fill information.
+   so visit_layer_node() checks if it is a composite layer
+   then it calls visit_layer_node() for all its child layer
+   otherwise calls visit_render_node() which try to visit all
+   the nodes present in the NodeList.
+
+   Note: renderTree() was only meant for internal use and only c structs
+   for not duplicating the data. so never save the raw pointers.
+   If possible try to avoid using it. 
+
+   https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668
+ */
+void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer) {
+	if (!layer->mVisible) {
+		return;
+	}
+	//Don't need to update it anymore since its layer is invisible.
+	if (layer->mAlpha == 0) {
+		return;
+	}
+
+	//Is this layer a container layer?
+	for (unsigned int i = 0; i < layer->mLayerList.size; i++) {
+		LOTLayerNode *clayer = layer->mLayerList.ptr[i];
+		_visit_layer_node(clayer);
+	}
+
+	//visit render nodes.
+	if (layer->mNodeList.size > 0) {
+		_visit_render_node(layer);
+	}
+}
+
+void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
+	for (uint32_t i = 0; i < layer->mNodeList.size; i++) {
+		LOTNode *node = layer->mNodeList.ptr[i];
+		if (!node) {
+			continue;
+		}
+
+		//Skip Invisible Stroke?
+		if (node->mStroke.enable && node->mStroke.width == 0) {
+			continue;
+		}
+
+		const float *data = node->mPath.ptPtr;
+		if (!data) {
+			continue;
+		}
+
+		for (size_t i = 0; i < node->mPath.elmCount; i++) {
+			String path;
+			switch (node->mPath.elmPtr[i]) {
+				case 0:
+					path = "{MoveTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
+					data += 2;
+					break;
+				case 1:
+					path = "{LineTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
+					data += 2;
+					break;
+				case 2:
+					path = "{CubicTo : c1(" + rtos(data[0]) + " " + rtos(data[1]) + ") c2(" + rtos(data[2]) + rtos(data[3]) + ") e(" + rtos(data[4]) + rtos(data[5]) + ")}";
+					data += 6;
+					break;
+				case 3:
+					path = "{close}";
+					break;
+				default:
+					break;
+			}
+			print_line(path);
+		}
+
+		//1: Stroke
+		if (node->mStroke.enable) {
+			// 	Stroke Width
+			// 	efl_gfx_shape_stroke_width_set(shape, node->mStroke.width);
+
+			// 	Stroke Cap
+			// 	Efl_Gfx_Cap cap;
+			switch (node->mStroke.cap) {
+				case CapFlat:
+					print_line("{CapFlat}");
+					break;
+				case CapSquare:
+					print_line("{CapSquare}");
+					break;
+				case CapRound:
+					print_line("{CapRound}");
+					break;
+				default:
+					print_line("{CapFlat}");
+					break;
+			}
+
+			//Stroke Join
+			switch (node->mStroke.join) {
+				case LOTJoinStyle::JoinMiter:
+					print_line("{JoinMiter}");
+					break;
+				case LOTJoinStyle::JoinBevel:
+					print_line("{JoinBevel}");
+					break;
+				case LOTJoinStyle::JoinRound:
+					print_line("{JoinRound}");
+					break;
+				default:
+					print_line("{JoinMiter}");
+					break;
+			}
+			//Stroke Dash
+			if (node->mStroke.dashArraySize > 0) {
+				for (int i = 0; i <= node->mStroke.dashArraySize; i += 2) {
+					print_line("{(length, gap) : (" + rtos(node->mStroke.dashArray[i]) + " " + rtos(node->mStroke.dashArray[i + 1]) + ")}");
+				}
+			}
+		}
+
+		//2: Fill Method
+		switch (node->mBrushType) {
+			case BrushSolid: {
+				float pa = ((float)node->mColor.a) / 255;
+				int r = (int)(((float)node->mColor.r) * pa);
+				int g = (int)(((float)node->mColor.g) * pa);
+				int b = (int)(((float)node->mColor.b) * pa);
+				int a = node->mColor.a;
+			} break;
+			case BrushGradient: {
+				// same way extract brush gradient value.
+			} break;
+			default:
+			  break;
+		}
+
+		//3: Fill Rule
+		if (node->mFillRule == LOTFillRule::FillEvenOdd) {
+			print_line("{fill type FillEvenOdd}");
+		} else if (node->mFillRule == LOTFillRule::FillWinding) {
+			print_line("{fill type FillWinding}");
+		}
+	}
+}
 
 String ResourceImporterLottie::get_importer_name() const {
 	return "lottie";
@@ -93,43 +243,15 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	lottie->size(w, h);
 	ERR_FAIL_COND_V(w == 0, FAILED);
 	ERR_FAIL_COND_V(h == 0, FAILED);
-
 	Node2D *root = memnew(Node2D);
-	AnimatedSprite2D *sprite = memnew(AnimatedSprite2D);
-	root->add_child(sprite);
-	sprite->set_owner(root);
-	Ref<QuadMesh> mesh;
-	mesh.instance();
-	Ref<Image> img;
-	img.instance();
-	Ref<SpriteFrames> frames;
-	frames.instance();
-	List<StringName> animations;
-	frames->get_animation_list(&animations);
-	String name = animations[0];
-	frames->set_animation_speed(name, lottie->frameRate());
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
+	for (int32_t frame_i = 0; frame_i < 1; frame_i++) {
 		Vector<uint32_t> buffer;
 		buffer.resize(w * h);
 		rlottie::Surface surface(buffer.ptrw(), w, h, w * 4);
-		lottie->renderSync(frame_i, surface);
-		PackedByteArray pixels = buffer.to_byte_array();
-		for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
-			uint8_t r = pixels[pixel_i + 2];
-			uint8_t g = pixels[pixel_i + 1];
-			uint8_t b = pixels[pixel_i + 0];
-			pixels.write[pixel_i + 2] = b;
-			pixels.write[pixel_i + 1] = g;
-			pixels.write[pixel_i + 0] = r;
-		}
-		img->create(w, h, false, Image::FORMAT_RGBA8, pixels);
-		img->generate_mipmaps();
-		Ref<ImageTexture> image_tex;
-		image_tex.instance();
-		image_tex->create_from_image(img);
-		frames->add_frame(name, image_tex);
+		auto root = lottie->renderTree(frame_i, w, h);
+		_visit_layer_node(root);
 	}
-	sprite->set_sprite_frames(frames);
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);
