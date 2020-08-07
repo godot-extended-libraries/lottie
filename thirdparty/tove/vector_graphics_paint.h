@@ -11,9 +11,6 @@
 
 class VGPaint : public Resource {
 	GDCLASS(VGPaint, Resource);
-
-public:
-	tove::PaintRef data = tove::tove_make_shared<tove::Color>(0.0f, 0.0f, 0.0f);
 };
 
 #endif // VG_PAINT_H

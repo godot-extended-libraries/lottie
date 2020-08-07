@@ -14,15 +14,15 @@
 
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
-#include "thirdparty/tove/vector_graphics_path.h"
 #include "thirdparty/tove/tove2d/src/cpp/graphics.h"
 #include "thirdparty/tove/vector_graphics_adaptive_renderer.h"
 #include "thirdparty/tove/vector_graphics_editor.h"
+#include "thirdparty/tove/vector_graphics_path.h"
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
 	VGPath *_visit_render_node(const LOTLayerNode *layer);
-	void _visit_layer_node(const LOTLayerNode *layer);
+	VGPath *_visit_layer_node(const LOTLayerNode *layer);
 
 public:
 	virtual String get_importer_name() const;
@@ -64,35 +64,29 @@ public:
 
    https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668
  */
-void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer) {
+VGPath *ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer) {
 	if (!layer->mVisible) {
-		return;
+		return nullptr;
 	}
 	//Don't need to update it anymore since its layer is invisible.
 	if (layer->mAlpha == 0) {
-		return;
+		return nullptr;
 	}
 
+	VGPath *path = memnew(VGPath);
 	//Is this layer a container layer?
 	for (unsigned int i = 0; i < layer->mLayerList.size; i++) {
 		LOTLayerNode *clayer = layer->mLayerList.ptr[i];
-		_visit_layer_node(clayer);
+		VGPath *layer_path = _visit_layer_node(clayer);
+		path->add_child(layer_path);
+		layer_path->set_owner(path);
 	}
 
-	Node2D *root = memnew(Node2D);
 	//visit render nodes.
 	if (layer->mNodeList.size > 0) {
-		VGPath *path = _visit_render_node(layer);
-		root->add_child(path);
-		path->set_owner(root);
+		path = _visit_render_node(layer);
 	}
-	Ref<PackedScene> vg_scene;
-	vg_scene.instance();
-	vg_scene->pack(root);
-	// TODO
-	//String save_path = p_save_path + ".scn";
-	//r_gen_files->push_back(save_path);
-	//return ResourceSaver::save(save_path, vg_scene);
+	return path;
 }
 
 VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
@@ -102,7 +96,7 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 	VGPath *root_path = memnew(VGPath(tove::tove_make_shared<tove::Path>()));
 	root_path->set_renderer(renderer);
 	for (uint32_t i = 0; i < layer->mNodeList.size; i++) {
-		VGPath *path = memnew(VGPath(tove::tove_make_shared<tove::Path>()));
+		tove::PathRef path_ref = tove::tove_make_shared<tove::Path>();
 		LOTNode *node = layer->mNodeList.ptr[i];
 		if (!node) {
 			continue;
@@ -117,29 +111,24 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 		if (!data) {
 			continue;
 		}
-		tove::SubpathRef tove_subpath = std::make_shared<tove::Subpath>();
-		int32_t subpath_count = 0;
+		tove::SubpathRef subpath_ref = std::make_shared<tove::Subpath>();
 		for (size_t i = 0; i < node->mPath.elmCount; i++) {
 			String path_print;
 			switch (node->mPath.elmPtr[i]) {
 				case 0:
 					path_print = "{MoveTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
 					data += 2;
-					path->set_position(Vector2(data[0], data[1]));
+					(Vector2(data[0], data[1]));
 					break;
 				case 1:
 					path_print = "{LineTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
 					data += 2;
-					tove_subpath->lineTo(data[0], data[1]);
-					path->set_points(subpath_count, VGTool::subpath_points_array(tove_subpath));
-					subpath_count++;
+					subpath_ref->lineTo(data[0], data[1]);
 					break;
 				case 2:
 					path_print = "{CubicTo : c1(" + rtos(data[0]) + " " + rtos(data[1]) + ") c2(" + rtos(data[2]) + rtos(data[3]) + ") e(" + rtos(data[4]) + rtos(data[5]) + ")}";
 					data += 6;
-					tove_subpath->curveTo(data[0], data[1], data[2], data[3], data[4], data[5]);
-					path->set_points(subpath_count, VGTool::subpath_points_array(tove_subpath));
-					subpath_count++;
+					subpath_ref->curveTo(data[0], data[1], data[2], data[3], data[4], data[5]);
 					break;
 				case 3:
 					path_print = "{close}";
@@ -149,6 +138,7 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 			}
 			print_line(path_print);
 		}
+		path_ref->addSubpath(subpath_ref);
 
 		//1: Stroke
 		if (node->mStroke.enable) {
@@ -176,15 +166,19 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 			switch (node->mStroke.join) {
 				case LOTJoinStyle::JoinMiter:
 					print_line("{JoinMiter}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
 					break;
 				case LOTJoinStyle::JoinBevel:
 					print_line("{JoinBevel}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_BEVEL);
 					break;
 				case LOTJoinStyle::JoinRound:
 					print_line("{JoinRound}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_ROUND);
 					break;
 				default:
 					print_line("{JoinMiter}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
 					break;
 			}
 			//Stroke Dash
@@ -192,6 +186,7 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 				for (int i = 0; i <= node->mStroke.dashArraySize; i += 2) {
 					print_line("{(length, gap) : (" + rtos(node->mStroke.dashArray[i]) + " " + rtos(node->mStroke.dashArray[i + 1]) + ")}");
 				}
+				path_ref->setLineDash(node->mStroke.dashArray, node->mStroke.dashArraySize);
 			}
 		}
 
@@ -205,7 +200,8 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 				float g = (int)(((float)node->mColor.g) * pa);
 				float b = (int)(((float)node->mColor.b) * pa);
 				float a = node->mColor.a;
-				paint->data->setRGBA(r, g, b, a);
+				tove::PaintRef paint_ref = tove::tove_make_shared<tove::Color>(r, g, b, a);
+				path_ref->setFillColor(paint_ref);
 			} break;
 			case BrushGradient: {
 				// same way extract brush gradient value.
@@ -213,15 +209,17 @@ VGPath *ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 			default:
 				break;
 		}
-		path->set_fill_color(paint);
 
 		//3: Fill Rule
 		if (node->mFillRule == LOTFillRule::FillEvenOdd) {
+			path_ref->setFillRule(TOVE_FILLRULE_EVEN_ODD);
 			print_line("{FillEvenOdd}");
 		} else if (node->mFillRule == LOTFillRule::FillWinding) {
+			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
 			print_line("{FillWinding}");
 		}
 		String name = "Path";
+		VGPath *path = memnew(VGPath(path_ref));
 		path->set_name(name);
 		root_path->add_child(path);
 		path->set_owner(root_path);
@@ -284,11 +282,13 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	Node2D *root = memnew(Node2D);
 	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
 	for (int32_t frame_i = 0; frame_i < 1; frame_i++) {
-		Vector<uint32_t> buffer;
-		buffer.resize(w * h);
-		rlottie::Surface surface(buffer.ptrw(), w, h, w * 4);
-		auto root = lottie->renderTree(frame_i, w, h);
-		_visit_layer_node(root);
+		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
+		VGPath *path = _visit_layer_node(tree);
+		if (!path) {
+			continue;
+		}
+		root->add_child(path);
+		path->set_owner(root);
 	}
 	Ref<PackedScene> scene;
 	scene.instance();

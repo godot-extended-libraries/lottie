@@ -291,10 +291,21 @@ void VGPath::update_tove_line_color() {
 }
 
 void VGPath::create_fill_color() {
-	Ref<VGPaint> paint;
-	paint.instance();
-	paint->data = tove_path->getFillColor();
-	set_fill_color(paint);
+	tove::PaintRef paint_ref = tove_path->getFillColor();
+	if (!paint_ref) {
+		return;
+	}
+	Ref<VGColor> vgcolor;
+	vgcolor.instance();
+	Color c;
+	ToveRGBA rgba;
+	c.r = rgba.r;
+	c.g = rgba.g;
+	c.b = rgba.b;
+	c.a = rgba.a;
+	paint_ref->getRGBA(rgba, 1.0f);
+	vgcolor->set_color(c);
+	set_fill_color(vgcolor);
 }
 
 void VGPath::create_line_color() {
@@ -324,12 +335,6 @@ void VGPath::_transform_changed(Node *p_node) {
 			path->set_dirty();
 		}
 	}
-
-	/*const int n = p_node->get_child_count();
-	for (int i = 0; i < n; i++) {
-		Node *child = p_node->get_child(i);
-		_transform_changed(child);
-	}*/
 }
 
 void VGPath::_notification(int p_what) {
