@@ -185,9 +185,9 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer) {
 
 		//3: Fill Rule
 		if (node->mFillRule == LOTFillRule::FillEvenOdd) {
-			print_line("{fill type FillEvenOdd}");
+			print_line("{FillEvenOdd}");
 		} else if (node->mFillRule == LOTFillRule::FillWinding) {
-			print_line("{fill type FillWinding}");
+			print_line("{FillWinding}");
 		}
 	}
 }
