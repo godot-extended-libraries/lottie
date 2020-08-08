@@ -320,6 +320,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		animation->track_insert_key(track, float(frame_i + 1) * hertz, false);
 		_visit_layer_node(tree, root, frame_root);
 	}
+	animation->set_loop(true);
 	root->set_dirty(true);
 	ap->add_animation("Default", animation);
 	root->add_child(ap);
