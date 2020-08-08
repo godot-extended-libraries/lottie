@@ -234,7 +234,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
 			print_verbose("{FillWinding}");
 		}
-		path->set_renderer(p_current_node->get_renderer());
 		p_current_node->add_child(path);
 		path->set_owner(p_owner);
 	}
@@ -314,7 +313,6 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
 		VGPath *frame = memnew(VGPath());
-		frame->set_renderer(renderer);
 		frame_root->add_frame(frame);
 		_visit_layer_node(tree, root, frame);
 		if (frame_i) {
