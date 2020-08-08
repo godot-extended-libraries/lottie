@@ -235,8 +235,11 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			print_verbose("{FillWinding}");
 		}
 		path->set_renderer(p_current_node->get_renderer());
-		p_current_node->add_child(path);
-		path->set_owner(p_owner);
+		Node2D *mesh = path->create_mesh_node();
+		ERR_CONTINUE(!mesh);
+		path->queue_delete();
+		p_current_node->add_child(mesh);
+		mesh->set_owner(p_owner);
 	}
 }
 
@@ -294,7 +297,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	VGPath *root = memnew(VGPath());
 	String base_name = p_source_file.get_file().get_basename();
 	root->set_name(base_name);
-	Ref<VGSpriteRenderer> renderer;
+	Ref<VGMeshRenderer> renderer;
 	renderer.instance();
 	renderer->set_quality(0.9f);
 	root->set_renderer(renderer);
@@ -305,6 +308,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	VGPathAnimation *frame_root = memnew(VGPathAnimation());
 	root->add_child(frame_root);
 	frame_root->set_owner(root);
+	frame_root->set_scale(Size2(w, -int(h)));
 	int32_t track = animation->get_track_count();
 	animation->add_track(Animation::TYPE_VALUE);
 	frame_root->set_renderer(renderer);
