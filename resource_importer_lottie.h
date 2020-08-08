@@ -142,7 +142,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		VGPath *path = memnew(VGPath(path_ref));
 		String name = node->keypath;
 		if (!name.empty()) {
-			path->set_name();
+			path->set_name(name);
 		}
 		//1: Stroke
 		if (node->mStroke.enable) {
