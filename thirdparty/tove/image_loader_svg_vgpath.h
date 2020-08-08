@@ -103,7 +103,7 @@ Error ResourceImporterSVGVGPath::import(const String &p_source_file, const Strin
 		}
 	}
 	int32_t n = tove_graphics->getNumPaths();
-	Ref<VGMeshRenderer> renderer;
+	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	VGPath *root_path = memnew(VGPath(tove::tove_make_shared<tove::Path>()));
 	root->add_child(root_path);
