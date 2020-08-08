@@ -105,26 +105,25 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		if (!data) {
 			continue;
 		}
-		path_ref->addSubpath(subpath_ref);
 		for (size_t i = 0; i < node->mPath.elmCount; i++) {
 			String path_print;
 			switch (node->mPath.elmPtr[i]) {
 				case 0: {
 					path_print = "{MoveTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
-					data += 2;
 					subpath_ref->moveTo(data[0], data[1]);
+					data += 2;
 					break;
 				}
 				case 1: {
 					path_print = "{LineTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
-					data += 2;
 					subpath_ref->lineTo(data[0], data[1]);
+					data += 2;
 					break;
 				}
 				case 2: {
 					path_print = "{CubicTo : c1(" + rtos(data[0]) + " " + rtos(data[1]) + ") c2(" + rtos(data[2]) + " " + rtos(data[3]) + ") e(" + rtos(data[4]) + " " + rtos(data[5]) + ")}";
-					data += 6;
 					subpath_ref->curveTo(data[0], data[1], data[2], data[3], data[4], data[5]);
+					data += 6;
 					break;
 				}
 				case 3: {
@@ -136,6 +135,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			}
 			print_line(path_print);
 		}
+		path_ref->addSubpath(subpath_ref);
 		//1: Stroke
 		if (node->mStroke.enable) {
 			// 	Stroke Width
