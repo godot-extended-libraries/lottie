@@ -152,6 +152,7 @@ Ref<ImageTexture> VGSpriteRenderer::render_texture(VGPath *p_path, bool p_hq) {
 			graphics,
 			Math::ceil(w * resolution), Math::ceil(h * resolution),
 			-bounds[0] * resolution, -bounds[1] * resolution,
-			resolution, p_hq));
+					resolution, p_hq),
+			ImageTexture::FLAG_FILTER);
 	return texture;
 }
