@@ -296,11 +296,11 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
-	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
+	ERR_FAIL_COND_V(!lottie->totalFrame(), FAILED);
 	AnimationPlayer *ap = memnew(AnimationPlayer);
 	Ref<Animation> animation;
 	animation.instance();
-	for (int32_t frame_i = 0; frame_i < lottie->frameRate(); frame_i++) {
+	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
 		VGPath *frame_root = memnew(VGPath());
 		frame_root->set_name(itos(frame_i));
