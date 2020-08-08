@@ -144,6 +144,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				vg_color.instance();
 				vg_color->set_color(Color(r, g, b, a));
 				path->set_fill_color(vg_color);
+				path->set_line_color(vg_color);
 				print_verbose("{BrushSolid}");
 			} break;
 			case BrushGradient: {
