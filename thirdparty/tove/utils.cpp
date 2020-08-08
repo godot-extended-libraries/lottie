@@ -302,7 +302,6 @@ void fragment()
 	surface_tool->create_from_triangle_arrays(arr);
 	surface_tool->index();
 	surface_tool->generate_normals();
-	surface_tool->generate_tangents();
 
 	p_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, surface_tool->commit_to_arrays());
 	return material;
