@@ -168,6 +168,9 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 }
 
 void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
+	if (!node->mGradient.stopPtr) {
+	
+	}
 	Ref<Gradient> color_ramp;
 	color_ramp.instance();
 	Vector<Gradient::Point> points;
@@ -200,6 +203,8 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 			break;
 		}
 		case LOTGradientType::GradientRadial: {
+			//TODO 
+			return;
 			print_verbose("{GradientRadial}");
 			Ref<VGRadialGradient> vg_gradient;
 			vg_gradient.instance();
