@@ -28,6 +28,7 @@ static void editor_init_callback() {
 
 void register_lottie_types() {
 	ClassDB::register_class<VGPath>();
+	ClassDB::register_class<VGPathAnimation>();	
 	ClassDB::register_virtual_class<VGPaint>();
 	ClassDB::register_class<VGColor>();
 	ClassDB::register_class<VGGradient>();

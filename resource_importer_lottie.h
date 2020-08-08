@@ -235,10 +235,8 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			print_verbose("{FillWinding}");
 		}
 		path->set_renderer(p_current_node->get_renderer());
-		Node2D *mesh = path->create_mesh_node();
-		path->queue_delete();
-		p_current_node->add_child(mesh);
-		mesh->set_owner(p_owner);
+		p_current_node->add_child(path);
+		path->set_owner(p_owner);
 	}
 }
 
@@ -296,7 +294,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	VGPath *root = memnew(VGPath());
 	String base_name = p_source_file.get_file().get_basename();
 	root->set_name(base_name);
-	Ref<VGMeshRenderer> renderer;
+	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	renderer->set_quality(0.9f);
 	root->set_renderer(renderer);
@@ -304,27 +302,27 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	AnimationPlayer *ap = memnew(AnimationPlayer);
 	Ref<Animation> animation;
 	animation.instance();
+	VGPathAnimation *frame_root = memnew(VGPathAnimation());
+	root->add_child(frame_root);
+	frame_root->set_owner(root);
+	int32_t track = animation->get_track_count();
+	animation->add_track(Animation::TYPE_VALUE);
+	frame_root->set_renderer(renderer);
+	float hertz = 1.0f / lottie->frameRate();
+	animation->set_length((lottie->totalFrame() - 1) * hertz);
+	animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":frame");
 	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
-		VGPath *frame_root = memnew(VGPath());
-		frame_root->set_name(itos(frame_i));
-		root->add_child(frame_root);
-		frame_root->set_owner(root);
-		if (frame_i) {
-			frame_root->set_visible(false);
+		VGPath *frame = memnew(VGPath());
+		frame->set_renderer(renderer);
+		frame_root->add_frame(frame);
+		_visit_layer_node(tree, root, frame);
+		if (!frame_i) {
+			frame->set_visible(false);
 		}
-		frame_root->set_renderer(renderer);
-		int32_t track = animation->get_track_count();
-		animation->add_track(Animation::TYPE_VALUE);
-		float hertz = 1.0f / lottie->frameRate();
-		animation->set_length((lottie->totalFrame() - 1) * hertz);
-		animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":visible");
-		animation->track_set_interpolation_type(track, Animation::INTERPOLATION_NEAREST);
-		animation->track_insert_key(track, float(-1) * hertz, false);
-		animation->track_insert_key(track, float(frame_i + 0) * hertz, true);
-		animation->track_insert_key(track, float(lottie->totalFrame() + 1) * hertz, false);
-		_visit_layer_node(tree, root, frame_root);
-		frame_root->set_scale(Size2(w, -int(h)));
+	}
+	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+		animation->track_insert_key(track, float(frame_i) * hertz, frame_i);
 	}
 	animation->set_loop(true);
 	root->set_dirty(true);

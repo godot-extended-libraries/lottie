@@ -101,4 +101,57 @@ public:
 	void import_svg(const String &p_path);
 };
 
+
+class VGPathAnimation : public VGPath {
+	GDCLASS(VGPathAnimation, VGPath);
+	int frame = 0;
+	int frame_count = 0;
+
+	void _reown(Node *p_owner, Node *p_current) {
+		p_current->set_owner(p_owner);
+		for (int32_t i = 0; i < p_current->get_child_count(); i++) {
+			Node *node = p_current->get_child(i);
+			_reown(p_owner, node);
+		}
+	}
+
+protected:
+	static void _bind_methods() {
+		ClassDB::bind_method(D_METHOD("clear"), &VGPathAnimation::clear);
+		ClassDB::bind_method(D_METHOD("set_frame", "frame"), &VGPathAnimation::set_frame);
+		ClassDB::bind_method(D_METHOD("get_frame"), &VGPathAnimation::get_frame);
+
+		ADD_PROPERTY(PropertyInfo(Variant::INT, "frame"), "set_frame", "get_frame");
+	}
+
+public:
+	int32_t get_frame()const {
+		return frame;
+	}
+	void set_frame(int frame) {
+		Node *current_frame = Object::cast_to<Node>(get_node_or_null(itos(frame)));
+		if (!current_frame) {
+			return;
+		}
+		for (int32_t i = 0; i < get_child_count(); i++) {
+			Node2D *node = Object::cast_to<Node2D>(get_child(i));
+			ERR_CONTINUE(!node);
+			node->set_visible(false);
+		}
+		current_frame->call("set_visible", true);
+	}
+	void add_frame(Node* p_frame) {
+		p_frame->set_name(itos(frame_count));
+		add_child(p_frame);
+		_reown(get_owner(), p_frame);
+		frame_count++;
+	}
+	void clear() {
+		for (int32_t i = 0; i < get_child_count(); i++) {
+			get_child(i)->queue_delete();
+		}
+		frame_count = 0;
+	}
+};
+
 #endif // VG_PATH_H
