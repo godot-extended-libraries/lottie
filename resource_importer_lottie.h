@@ -324,7 +324,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		animation->track_insert_key(track, float(frame_i + 0) * hertz, true);
 		animation->track_insert_key(track, float(lottie->totalFrame() + 1) * hertz, false);
 		_visit_layer_node(tree, root, frame_root);
-		frame_root->set_scale(Size2(w, -int(h)) * 10);
+		frame_root->set_scale(Size2(w, -int(h)));
 	}
 	animation->set_loop(true);
 	root->set_dirty(true);
