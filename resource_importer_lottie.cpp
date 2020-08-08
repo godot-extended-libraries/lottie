@@ -56,7 +56,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				}
 				case 3: {
 					path_print = "{close}";
-					path_ref->clean();
 					path_ref->addSubpath(subpath_ref);
 					break;
 				}
