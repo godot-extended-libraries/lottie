@@ -299,11 +299,11 @@ void VGPath::create_fill_color() {
 	vgcolor.instance();
 	Color c;
 	ToveRGBA rgba;
+	paint_ref->getRGBA(rgba, 1.0f);
 	c.r = rgba.r;
 	c.g = rgba.g;
 	c.b = rgba.b;
 	c.a = rgba.a;
-	paint_ref->getRGBA(rgba, 1.0f);
 	vgcolor->set_color(c);
 	set_fill_color(vgcolor);
 }

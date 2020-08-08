@@ -18,6 +18,7 @@
 #include "thirdparty/tove/vector_graphics_editor.h"
 #include "thirdparty/tove/vector_graphics_path.h"
 #include "thirdparty/tove/vector_graphics_texture_renderer.h"
+#include "thirdparty/tove/vector_graphics_color.h"
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
@@ -135,12 +136,24 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			}
 			print_line(path_print);
 		}
-		path_ref->addSubpath(subpath_ref);
+		VGPath *path = memnew(VGPath(path_ref));
+		Ref<VGSpriteRenderer> renderer;
 		//1: Stroke
 		if (node->mStroke.enable) {
 			// 	Stroke Width
-			path_ref->setLineWidth(node->mStroke.width);
-
+			path->set_line_width(node->mStroke.width);
+			float r = node->mColor.r;
+			r /= 255.0f;
+			float g = node->mColor.g;
+			g /= 255.0f;
+			float b = node->mColor.b;
+			b /= 255.0f;
+			float a = node->mColor.a;
+			a /= 255.0f;
+			Ref<VGColor> vg_color;
+			vg_color.instance();
+			vg_color->set_color(Color(r, g, b, a));
+			path->set_line_color(vg_color);
 			// 	Stroke Cap
 			// 	Efl_Gfx_Cap cap;
 			switch (node->mStroke.cap) {
@@ -190,18 +203,23 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		paint.instance();
 		switch (node->mBrushType) {
 			case BrushSolid: {
-				float pa = ((float)node->mColor.a) / 255;
-				float r = (int)(((float)node->mColor.r) * pa);
-				float g = (int)(((float)node->mColor.g) * pa);
-				float b = (int)(((float)node->mColor.b) * pa);
+				float r = node->mColor.r;
+				r /= 255.0f;
+				float g = node->mColor.g;
+				g /= 255.0f;
+				float b = node->mColor.b;
+				b /= 255.0f;
 				float a = node->mColor.a;
-				tove::PaintRef fill_ref = tove::tove_make_shared<tove::Color>(r, g, b, a);
-				path_ref->setFillColor(fill_ref);
-				tove::PaintRef line_ref = std::make_shared<tove::Color>(r, g, b);
-				path_ref->setLineColor(line_ref);
+				a /= 255.0f;
+				Ref<VGColor> vg_color;
+				vg_color.instance();
+				vg_color->set_color(Color(r, g, b, a));
+				path->set_fill_color(vg_color);
+				print_line("{BrushSolid}");
 			} break;
 			case BrushGradient: {
 				// same way extract brush gradient value.
+				print_line("{BrushGradient}");
 			} break;
 			default:
 				break;
@@ -215,9 +233,9 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
 			print_line("{FillWinding}");
 		}
-
-		VGPath *path = memnew(VGPath(path_ref));
-		Ref<VGSpriteRenderer> renderer;
+		path_ref->addSubpath(subpath_ref);
+		path_ref->clean();
+		path->set_dirty(true);
 		renderer.instance();
 		path->set_renderer(renderer);
 		p_current_node->add_child(path);
@@ -277,7 +295,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	lottie->size(w, h);
 	ERR_FAIL_COND_V(w == 0, FAILED);
 	ERR_FAIL_COND_V(h == 0, FAILED);
-	Node2D *root = memnew(Node2D);
+	VGPath *root = memnew(VGPath);
 	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
 	for (int32_t frame_i = 0; frame_i < 1; frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
