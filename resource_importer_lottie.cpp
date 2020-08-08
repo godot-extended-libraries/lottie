@@ -258,19 +258,18 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	lottie->size(w, h);
 	ERR_FAIL_COND_V(w == 0, FAILED);
 	ERR_FAIL_COND_V(h == 0, FAILED);
-	VGPath *root = memnew(VGPath());
-	String base_name = p_source_file.get_file().get_basename();
-	root->set_name(base_name);
+	VGPath *root = memnew(VGPath);
 	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
+	String base_name = p_source_file.get_file().get_basename();
+	root->set_name(base_name);
 	ERR_FAIL_COND_V(!lottie->totalFrame(), FAILED);
 	String frame_root_path;
 	{
 		VGPathAnimation *frame_root = memnew(VGPathAnimation());
 		root->add_child(frame_root);
 		frame_root->set_owner(root);
-		frame_root->set_renderer(renderer);
 		for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
 			const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
 			VGPath *frame = memnew(VGPath());
