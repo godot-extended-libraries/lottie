@@ -135,7 +135,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				default:
 					break;
 			}
-			print_line(path_print);
+			print_verbose(path_print);
 		}
 		VGPath *path = memnew(VGPath(path_ref));
 		path->set_name(node->keypath);
@@ -175,26 +175,26 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			//Stroke Join
 			switch (node->mStroke.join) {
 				case LOTJoinStyle::JoinMiter:
-					print_line("{JoinMiter}");
+					print_verbose("{JoinMiter}");
 					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
 					break;
 				case LOTJoinStyle::JoinBevel:
-					print_line("{JoinBevel}");
+					print_verbose("{JoinBevel}");
 					path_ref->setLineJoin(TOVE_LINEJOIN_BEVEL);
 					break;
 				case LOTJoinStyle::JoinRound:
-					print_line("{JoinRound}");
+					print_verbose("{JoinRound}");
 					path_ref->setLineJoin(TOVE_LINEJOIN_ROUND);
 					break;
 				default:
-					print_line("{JoinMiter}");
+					print_verbose("{JoinMiter}");
 					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
 					break;
 			}
 			//Stroke Dash
 			if (node->mStroke.dashArraySize > 0) {
 				for (int i = 0; i <= node->mStroke.dashArraySize; i += 2) {
-					print_line("{(length, gap) : (" + rtos(node->mStroke.dashArray[i]) + " " + rtos(node->mStroke.dashArray[i + 1]) + ")}");
+					print_verbose("{(length, gap) : (" + rtos(node->mStroke.dashArray[i]) + " " + rtos(node->mStroke.dashArray[i + 1]) + ")}");
 				}
 				path_ref->setLineDash(node->mStroke.dashArray, node->mStroke.dashArraySize);
 			}
@@ -216,11 +216,11 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				vg_color.instance();
 				vg_color->set_color(Color(r, g, b, a));
 				path->set_fill_color(vg_color);
-				print_line("{BrushSolid}");
+				print_verbose("{BrushSolid}");
 			} break;
 			case BrushGradient: {
 				// same way extract brush gradient value.
-				print_line("{BrushGradient}");
+				print_verbose("{BrushGradient}");
 			} break;
 			default:
 				break;
@@ -229,10 +229,10 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		//Fill Rule
 		if (node->mFillRule == LOTFillRule::FillEvenOdd) {
 			path_ref->setFillRule(TOVE_FILLRULE_EVEN_ODD);
-			print_line("{FillEvenOdd}");
+			print_verbose("{FillEvenOdd}");
 		} else if (node->mFillRule == LOTFillRule::FillWinding) {
 			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
-			print_line("{FillWinding}");
+			print_verbose("{FillWinding}");
 		}
 		p_current_node->add_child(path);
 		path->set_owner(p_owner);
@@ -311,12 +311,13 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		}
 		int32_t track = animation->get_track_count();
 		animation->add_track(Animation::TYPE_VALUE);
-		animation->set_length(lottie->totalFrame() / lottie->frameRate());
+		float hertz = 1.0f / lottie->frameRate();
+		animation->set_length(lottie->totalFrame() * hertz);
 		animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":visible");
 		animation->track_set_interpolation_type(track, Animation::INTERPOLATION_NEAREST);
-		animation->track_insert_key(track, float(frame_i - 1) / lottie->frameRate(), false);
-		animation->track_insert_key(track, float(frame_i) / lottie->frameRate(), true);
-		animation->track_insert_key(track, float(frame_i + 1) / lottie->frameRate(), false);
+		animation->track_insert_key(track, float(frame_i - 1) * hertz, false);
+		animation->track_insert_key(track, float(frame_i + 0) * hertz, true);
+		animation->track_insert_key(track, float(frame_i + 1) * hertz, false);
 		_visit_layer_node(tree, root, frame_root);
 	}
 	root->set_dirty(true);
