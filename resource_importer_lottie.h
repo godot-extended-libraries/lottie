@@ -19,6 +19,8 @@
 #include "thirdparty/tove/vector_graphics_editor.h"
 #include "thirdparty/tove/vector_graphics_path.h"
 #include "thirdparty/tove/vector_graphics_texture_renderer.h"
+#include "thirdparty/tove/vector_graphics_linear_gradient.h"
+#include "thirdparty/tove/vector_graphics_radial_gradient.h"
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
@@ -171,7 +173,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 					print_verbose("{CapFlat}");
 					break;
 			}
-
 			//Stroke Join
 			switch (node->mStroke.join) {
 				case LOTJoinStyle::JoinMiter:
@@ -200,8 +201,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			}
 		}
 		//Fill Method
-		Ref<VGPaint> paint;
-		paint.instance();
 		switch (node->mBrushType) {
 			case BrushSolid: {
 				float r = node->mColor.r;
@@ -219,8 +218,58 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				print_verbose("{BrushSolid}");
 			} break;
 			case BrushGradient: {
-				// same way extract brush gradient value.
-				print_verbose("{BrushGradient}");
+				Ref<Gradient> color_ramp;
+				color_ramp.instance();
+				Vector<Gradient::Point> points;
+				for (int32_t stop_i = 0; stop_i < node->mGradient.stopCount; stop_i++) {
+					LOTGradientStop stop = node->mGradient.stopPtr[stop_i];
+					float r = stop.r;
+					r /= 255.0f;
+					float g = stop.g;
+					g /= 255.0f;
+					float b = stop.b;
+					b /= 255.0f;
+					float a = stop.a;
+					a /= 255.0f;
+					Gradient::Point p;
+					p.offset = stop.pos;
+					p.color = Color(r, g, b, a);
+					points.push_back(p);
+				}
+				color_ramp->set_points(points);
+				switch (node->mGradient.type) {
+					case LOTGradientType::GradientLinear: {
+						print_verbose("{GradientLinear}");
+						Ref<VGLinearGradient> vg_gradient;
+						vg_gradient.instance();
+						vg_gradient->set_color_ramp(color_ramp);
+						vg_gradient->set_p1(Vector2(node->mGradient.start.x, node->mGradient.start.y));
+						vg_gradient->set_p2(Vector2(node->mGradient.end.x, node->mGradient.end.y));
+						path->set_fill_color(vg_gradient);
+						break;
+					}
+					case LOTGradientType::GradientRadial: {
+						print_verbose("{GradientRadial}");
+						Ref<VGRadialGradient> vg_gradient;
+						vg_gradient.instance();
+						Vector2 center;
+						center.x = node->mGradient.center.x;
+						center.y = node->mGradient.center.y;
+						vg_gradient->set_center(center);
+						Vector2 focal;
+						center.x = node->mGradient.focal.x;
+						center.y = node->mGradient.focal.y;
+						vg_gradient->set_focal(focal);
+						float radius = node->mGradient.fradius;
+						vg_gradient->set_radius(radius);
+						vg_gradient->set_color_ramp(color_ramp);
+						path->set_fill_color(vg_gradient);
+						break;
+					}
+					default:
+						break;
+				}
+
 			} break;
 			default:
 				break;
