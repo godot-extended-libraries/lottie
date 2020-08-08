@@ -750,6 +750,7 @@ Node2D *VGPath::create_mesh_node() {
 				mesh_inst->set_texture(texture);
 			}
 			mesh_inst->set_name(get_name());
+			mesh_inst->set_scale(Size2(1.0f,-1.0f));
 			return mesh_inst;
 		}
 	}
