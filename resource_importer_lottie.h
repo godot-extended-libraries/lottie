@@ -321,7 +321,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		frame->set_renderer(renderer);
 		frame_root->add_frame(frame);
 		_visit_layer_node(tree, root, frame);
-		if (!frame_i) {
+		if (frame_i) {
 			frame->set_visible(false);
 		}
 	}
