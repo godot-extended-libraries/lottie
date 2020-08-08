@@ -297,34 +297,39 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	renderer.instance();
 	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->totalFrame(), FAILED);
-	AnimationPlayer *ap = memnew(AnimationPlayer);
-	Ref<Animation> animation;
-	animation.instance();
-	VGPathAnimation *frame_root = memnew(VGPathAnimation());
-	root->add_child(frame_root);
-	frame_root->set_owner(root);
-	int32_t track = animation->get_track_count();
-	animation->add_track(Animation::TYPE_VALUE);
-	frame_root->set_renderer(renderer);
-	float hertz = 1.0f / lottie->frameRate();
-	animation->set_length((lottie->totalFrame() - 1) * hertz);
-	animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":frame");
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
-		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
-		VGPath *frame = memnew(VGPath());
-		frame_root->add_frame(frame);
-		_visit_layer_node(tree, root, frame);
-		if (frame_i) {
-			frame->set_visible(false);
+	String frame_root_path;
+	{
+		VGPathAnimation *frame_root = memnew(VGPathAnimation());
+		root->add_child(frame_root);
+		frame_root->set_owner(root);
+		frame_root->set_renderer(renderer);
+		for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+			const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
+			VGPath *frame = memnew(VGPath());
+			frame_root->add_frame(frame);
+			_visit_layer_node(tree, root, frame);
+			if (frame_i) {
+				frame->set_visible(false);
+			}
 		}
+		frame_root_path = String(root->get_path_to(frame_root)) + ":frame";
 	}
-	animation->track_insert_key(track, float(0) * hertz, 0);
-	animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, lottie->totalFrame() - 1);
-	animation->set_loop(true);
-	root->set_dirty(true);
-	ap->add_animation("Default", animation);
-	root->add_child(ap);
-	ap->set_owner(root);
+	{
+		AnimationPlayer *ap = memnew(AnimationPlayer);
+		Ref<Animation> animation;
+		animation.instance();
+		float hertz = 1.0f / lottie->frameRate();
+		int32_t track = animation->get_track_count();
+		animation->add_track(Animation::TYPE_VALUE);
+		animation->set_length((lottie->totalFrame() - 1) * hertz);
+		animation->track_set_path(track, frame_root_path);
+		animation->track_insert_key(track, float(0) * hertz, 0);
+		animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, lottie->totalFrame() - 1);
+		animation->set_loop(true);
+		ap->add_animation("Default", animation);
+		root->add_child(ap);
+		ap->set_owner(root);
+	}
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);
