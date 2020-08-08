@@ -6,10 +6,10 @@
 #include "core/os/file_access.h"
 #include "editor/editor_node.h"
 #include "scene/2d/sprite.h"
+#include "vector_graphics_adaptive_renderer.h"
 #include "vector_graphics_color.h"
 #include "vector_graphics_linear_gradient.h"
 #include "vector_graphics_radial_gradient.h"
-#include "vector_graphics_adaptive_renderer.h"
 
 static tove::PaintRef to_tove_paint(Ref<VGPaint> p_paint) {
 	Ref<VGColor> color = p_paint;
@@ -27,13 +27,13 @@ static tove::PaintRef to_tove_paint(Ref<VGPaint> p_paint) {
 				Vector2 p1 = linear_gradient->get_p1();
 				Vector2 p2 = linear_gradient->get_p2();
 				tove_gradient = tove::tove_make_shared<tove::LinearGradient>(
-					p1.x, p1.y, p2.x, p2.y);
+						p1.x, p1.y, p2.x, p2.y);
 			} else if (!radial_gradient.is_null()) {
 				Vector2 center = radial_gradient->get_center();
 				Vector2 focal = radial_gradient->get_focal();
 				float radius = radial_gradient->get_radius();
 				tove_gradient = tove::tove_make_shared<tove::RadialGradient>(
-					center.x, center.y, focal.x, focal.y, radius);
+						center.x, center.y, focal.x, focal.y, radius);
 			} else {
 				return tove::PaintRef();
 			}
@@ -43,11 +43,11 @@ static tove::PaintRef to_tove_paint(Ref<VGPaint> p_paint) {
 				const Vector<Gradient::Point> &p = color_ramp->get_points();
 				for (int i = 0; i < p.size(); i++) {
 					tove_gradient->addColorStop(
-						p[i].offset,
-						p[i].color.r,
-						p[i].color.g,
-						p[i].color.b,
-						p[i].color.a);
+							p[i].offset,
+							p[i].color.r,
+							p[i].color.g,
+							p[i].color.b,
+							p[i].color.a);
 				}
 			}
 
@@ -56,7 +56,7 @@ static tove::PaintRef to_tove_paint(Ref<VGPaint> p_paint) {
 	} else {
 		const Color c = color->get_color();
 		return tove::tove_make_shared<tove::Color>(c.r, c.g, c.b, c.a);
-	}	
+	}
 }
 
 static Ref<VGPaint> from_tove_paint(const tove::PaintRef &p_paint) {
@@ -119,7 +119,6 @@ static Point2 compute_center(const tove::PathRef &p_path) {
 }
 
 void VGPath::import_svg(const String &p_path) {
-
 	String units = "px";
 	float dpi = 96.0;
 
@@ -129,7 +128,7 @@ void VGPath::import_svg(const String &p_path) {
 	str.parse_utf8((const char *)buf.ptr(), buf.size());
 
 	tove::GraphicsRef tove_graphics = tove::Graphics::createFromSVG(
-		str.utf8().ptr(), units.utf8().ptr(), dpi);
+			str.utf8().ptr(), units.utf8().ptr(), dpi);
 
 	const float *bounds = tove_graphics->getBounds();
 
@@ -207,8 +206,7 @@ void VGPath::set_inherited_dirty(Node *p_node) {
 }
 
 void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics,
-	const Transform2D &p_transform, const Node *p_node) {
-
+		const Transform2D &p_transform, const Node *p_node) {
 	const int n = p_node->get_child_count();
 	for (int i = 0; i < n; i++) {
 		Node *child = p_node->get_child(i);
@@ -226,7 +224,7 @@ void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics,
 	if (p_node->is_class_ptr(get_class_ptr_static())) {
 		const VGPath *path = Object::cast_to<VGPath>(p_node);
 		p_tove_graphics->addPath(new_transformed_path(
-			path->get_tove_path(), p_transform));
+				path->get_tove_path(), p_transform));
 	}
 }
 
@@ -243,7 +241,7 @@ VGPath *VGPath::get_root_path() {
 		}
 		node = node->get_parent();
 	}
-	return root;	
+	return root;
 }
 
 Ref<VGRenderer> VGPath::get_inherited_renderer() const {
@@ -265,7 +263,6 @@ Ref<VGRenderer> VGPath::get_inherited_renderer() const {
 }
 
 void VGPath::update_mesh_representation() {
-
 	if (!dirty) {
 		return;
 	}
@@ -314,7 +311,7 @@ void VGPath::create_line_color() {
 
 void VGPath::_renderer_changed() {
 	set_dirty();
-	set_inherited_dirty(this);	
+	set_inherited_dirty(this);
 }
 
 void VGPath::_bubble_change() {
@@ -338,7 +335,6 @@ void VGPath::_transform_changed(Node *p_node) {
 }
 
 void VGPath::_notification(int p_what) {
-
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
 			update_mesh_representation();
@@ -367,7 +363,6 @@ void VGPath::_notification(int p_what) {
 }
 
 void VGPath::_bind_methods() {
-
 	ClassDB::bind_method(D_METHOD("set_renderer", "renderer"), &VGPath::set_renderer);
 	ClassDB::bind_method(D_METHOD("get_renderer"), &VGPath::get_renderer);
 
@@ -387,7 +382,7 @@ void VGPath::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("insert_curve", "subpath", "t"), &VGPath::insert_curve);
 	ClassDB::bind_method(D_METHOD("remove_curve", "subpath", "curve"), &VGPath::remove_curve);
-	ClassDB::bind_method(D_METHOD("set_points", "subpath", "points"), &VGPath::set_points);\
+	ClassDB::bind_method(D_METHOD("set_points", "subpath", "points"), &VGPath::set_points);
 
 	ClassDB::bind_method(D_METHOD("_renderer_changed"), &VGPath::_renderer_changed);
 	ClassDB::bind_method(D_METHOD("recenter"), &VGPath::recenter);
@@ -424,10 +419,11 @@ bool VGPath::_set(const StringName &p_name, const Variant &p_value) {
 
 		ERR_FAIL_INDEX_V(subpath, tove_path->getNumSubpaths(), false);
 		tove::SubpathRef tove_subpath = tove_path->getSubpath(subpath);
-		
+
 		if (subwhat == "closed") {
 			tove_subpath->setIsClosed(p_value);
-		} if (subwhat == "points") {
+		}
+		if (subwhat == "points") {
 			PoolVector2Array pts = p_value;
 			const int n = pts.size();
 			float *buf = new float[n * 2];
@@ -445,7 +441,7 @@ bool VGPath::_set(const StringName &p_name, const Variant &p_value) {
 		return false;
 	}
 
-	return true;	
+	return true;
 }
 
 bool VGPath::_get(const StringName &p_name, Variant &r_ret) const {
@@ -497,7 +493,6 @@ bool VGPath::_get(const StringName &p_name, Variant &r_ret) const {
 }
 
 void VGPath::_get_property_list(List<PropertyInfo> *p_list) const {
-
 	p_list->push_back(PropertyInfo(Variant::STRING, "name", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 	p_list->push_back(PropertyInfo(Variant::REAL, "line_width", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 	p_list->push_back(PropertyInfo(Variant::INT, "fill_rule", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
@@ -506,7 +501,7 @@ void VGPath::_get_property_list(List<PropertyInfo> *p_list) const {
 		const String subpath_prefix = "subpaths/" + itos(j);
 
 		p_list->push_back(PropertyInfo(Variant::BOOL, subpath_prefix + "/closed", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
-		p_list->push_back(PropertyInfo(Variant::POOL_VECTOR2_ARRAY, subpath_prefix + "/points", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));			
+		p_list->push_back(PropertyInfo(Variant::POOL_VECTOR2_ARRAY, subpath_prefix + "/points", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 	}
 }
 
@@ -515,9 +510,8 @@ Ref<VGRenderer> VGPath::get_renderer() {
 }
 
 void VGPath::set_renderer(const Ref<VGRenderer> &p_renderer) {
-
 	if (renderer.is_valid()) {
-		renderer->disconnect("changed", this, "_renderer_changed");		
+		renderer->disconnect("changed", this, "_renderer_changed");
 	}
 	renderer = p_renderer;
 	if (renderer.is_valid()) {
@@ -533,7 +527,6 @@ Ref<VGPaint> VGPath::get_fill_color() const {
 }
 
 void VGPath::set_fill_color(const Ref<VGPaint> &p_paint) {
-
 	if (fill_color == p_paint) {
 		return;
 	}
@@ -555,7 +548,6 @@ Ref<VGPaint> VGPath::get_line_color() const {
 }
 
 void VGPath::set_line_color(const Ref<VGPaint> &p_paint) {
-
 	if (line_color == p_paint) {
 		return;
 	}
@@ -599,8 +591,8 @@ VGPath *VGPath::find_clicked_child(const Point2 &p_point) {
 			}
 		}
 	}
-	
-	return nullptr;	
+
+	return nullptr;
 }
 
 Rect2 VGPath::_edit_get_rect() const {
@@ -651,9 +643,9 @@ void VGPath::set_points(int p_subpath, Array p_points) {
 	try {
 		tove_subpath->setPoints(p, n, false);
 		set_dirty();
-	} catch(...) {
+	} catch (...) {
 		delete[] p;
-		throw;	
+		throw;
 	}
 	delete[] p;
 }
@@ -722,20 +714,22 @@ tove::GraphicsRef VGPath::get_subtree_graphics() const {
 }
 
 Node2D *VGPath::create_mesh_node() {
-
 	Ref<VGRenderer> renderer = get_inherited_renderer();
 	if (renderer.is_valid()) {
+
 		if (renderer->prefer_sprite()) {
 			Sprite *sprite = memnew(Sprite);
 			sprite->set_texture(renderer->render_texture(this, true));
-
-			//Size2 s = get_global_transform().get_scale();
-			Size2 s = get_transform().get_scale();
-			float scale = MAX(s.width, s.height);
-
+			Transform2D xform = get_transform();
+			VGPath *current = this;
+			while (current) {
+				xform = current->get_transform() * xform;
+				current = Object::cast_to<VGPath>(current->get_parent());
+			}
 			Transform2D t;
-			t.scale(Size2(scale, scale));
-
+			t.scale(xform.get_scale());
+			Size2 s = xform.get_scale();
+			float scale = MAX(s.width, s.height);
 			sprite->set_transform(get_transform() * t.affine_inverse());
 			sprite->set_name(get_name());
 			sprite->set_centered(false);
@@ -755,8 +749,6 @@ Node2D *VGPath::create_mesh_node() {
 			if (texture.is_valid()) {
 				mesh_inst->set_texture(texture);
 			}
-
-			mesh_inst->set_transform(get_transform());
 			mesh_inst->set_name(get_name());
 			return mesh_inst;
 		}

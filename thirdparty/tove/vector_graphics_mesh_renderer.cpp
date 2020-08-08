@@ -44,9 +44,14 @@ public:
                 if (meshRenderer.is_valid()) {
                     tove::TesselatorRef tesselator = meshRenderer->get_tesselator();
                     if (tesselator) {
-                        Size2 s = path->get_global_transform().get_scale();
+						Transform2D xform = path->get_transform();
+						VGPath *current = path;
+						while (current) {
+							xform = current->get_transform() * xform;
+							current = Object::cast_to<VGPath>(current->get_parent());
+                        }
+						Size2 s = xform.get_scale();
                         tesselator->beginTesselate(root_graphics.get(), MAX(s.width, s.height));
-
                         tesselator->pathToMesh(
                             UPDATE_MESH_EVERYTHING,
                             new_transformed_path(path->get_tove_path(), p_transform),

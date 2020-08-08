@@ -22,8 +22,8 @@
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
-	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, Node *p_current_node);
-	void _visit_layer_node(const LOTLayerNode *layer, Node *p_owner, Node *p_current_node);
+	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
+	void _visit_layer_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
 
 public:
 	virtual String get_importer_name() const;
@@ -65,7 +65,7 @@ public:
 
    https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668
  */
-void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer, Node *p_owner, Node *p_current_node) {
+void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node) {
 	if (!layer->mVisible) {
 		return;
 	}
@@ -85,7 +85,7 @@ void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer, Node *
 	}
 }
 
-void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node *p_owner, Node *p_current_node) {
+void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node) {
 	for (uint32_t i = 0; i < layer->mNodeList.size; i++) {
 		tove::PathRef path_ref = tove::tove_make_shared<tove::Path>();
 		LOTNode *node = layer->mNodeList.ptr[i];
@@ -234,8 +234,10 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
 			print_verbose("{FillWinding}");
 		}
-		p_current_node->add_child(path);
-		path->set_owner(p_owner);
+		path->set_renderer(p_current_node->get_renderer());
+		Node2D *mesh_node = path->create_mesh_node();
+		p_current_node->add_child(mesh_node);
+		mesh_node->set_owner(p_owner);
 	}
 }
 
@@ -293,7 +295,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	VGPath *root = memnew(VGPath());
 	String base_name = p_source_file.get_file().get_basename();
 	root->set_name(base_name);
-	Ref<VGSpriteRenderer> renderer;
+	Ref<VGMeshRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->totalFrame(), FAILED);
@@ -309,6 +311,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		if (frame_i) {
 			frame_root->set_visible(false);
 		}
+		frame_root->set_renderer(renderer);
 		int32_t track = animation->get_track_count();
 		animation->add_track(Animation::TYPE_VALUE);
 		float hertz = 1.0f / lottie->frameRate();
@@ -319,6 +322,8 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		animation->track_insert_key(track, float(frame_i + 0) * hertz, true);
 		animation->track_insert_key(track, float(frame_i + 1) * hertz, false);
 		_visit_layer_node(tree, root, frame_root);
+		frame_root->set_scale(Vector2(1000.f, 1000.f));
+		frame_root->set_display_folded(true);
 	}
 	animation->set_loop(true);
 	root->set_dirty(true);
