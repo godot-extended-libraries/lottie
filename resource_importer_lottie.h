@@ -137,6 +137,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			print_line(path_print);
 		}
 		VGPath *path = memnew(VGPath(path_ref));
+		path->set_name(node->keypath);
 		Ref<VGSpriteRenderer> renderer;
 		//1: Stroke
 		if (node->mStroke.enable) {
@@ -236,8 +237,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		path_ref->addSubpath(subpath_ref);
 		path_ref->clean();
 		path->set_dirty(true);
-		renderer.instance();
-		path->set_renderer(renderer);
 		p_current_node->add_child(path);
 		path->set_owner(p_owner);
 		path->set_dirty(true);
