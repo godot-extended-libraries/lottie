@@ -295,7 +295,6 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	root->set_name(base_name);
 	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
-	renderer->set_quality(0.9f);
 	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->totalFrame(), FAILED);
 	AnimationPlayer *ap = memnew(AnimationPlayer);
