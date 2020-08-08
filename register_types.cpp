@@ -14,6 +14,7 @@
 #include "thirdparty/tove/vector_graphics_radial_gradient.h"
 #include "thirdparty/tove/vector_graphics_renderer.h"
 #include "thirdparty/tove/vector_graphics_texture_renderer.h"
+#include "thirdparty/tove/image_loader_svg_vgpath.h"
 
 #ifdef TOOLS_ENABLED
 #include "thirdparty/tove/vector_graphics_editor_plugin.h"
@@ -46,6 +47,10 @@ void register_lottie_types() {
 	Ref<ResourceImporterLottie> lottie_spatial_loader;
 	lottie_spatial_loader.instance();
 	ResourceFormatImporter::get_singleton()->add_importer(lottie_spatial_loader);
+
+	Ref<ResourceImporterSVGVGPath> svg_vg_path_loader;
+	svg_vg_path_loader.instance();
+	ResourceFormatImporter::get_singleton()->add_importer(svg_vg_path_loader);
 }
 
 void unregister_lottie_types() {
