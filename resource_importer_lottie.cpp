@@ -128,7 +128,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				}
 				path_ref->setLineDash(node->mStroke.dashArray, node->mStroke.dashArraySize);
 			}
-			_read_gradient(node, path);
+			_read_gradient(node, path, true);
 		}
 		//Fill Method
 		switch (node->mBrushType) {
@@ -148,7 +148,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				print_verbose("{BrushSolid}");
 			} break;
 			case BrushGradient: {
-				_read_gradient(node, path);
+				_read_gradient(node, path, false);
 
 			} break;
 			default:
@@ -168,7 +168,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 	}
 }
 
-void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
+void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path, bool p_is_line) {
 	Ref<Gradient> color_ramp;
 	color_ramp.instance();
 	Vector<Gradient::Point> points;
@@ -196,7 +196,11 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 			vg_gradient->set_color_ramp(color_ramp);
 			vg_gradient->set_p1(Vector2(node->mGradient.start.x, node->mGradient.start.y));
 			vg_gradient->set_p2(Vector2(node->mGradient.end.x, node->mGradient.end.y));
-			path->set_fill_color(vg_gradient);
+			if (!p_is_line) {
+				path->set_fill_color(vg_gradient);
+			} else {
+				path->set_line_color(vg_gradient);
+			}
 			break;
 		}
 		case LOTGradientType::GradientRadial: {
@@ -214,7 +218,11 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 			float radius = node->mGradient.fradius;
 			vg_gradient->set_radius(radius);
 			vg_gradient->set_color_ramp(color_ramp);
-			path->set_fill_color(vg_gradient);
+			if (!p_is_line) {
+				path->set_fill_color(vg_gradient);
+			} else {
+				path->set_line_color(vg_gradient);
+			}
 			break;
 		}
 		default:

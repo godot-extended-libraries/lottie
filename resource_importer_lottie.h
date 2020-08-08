@@ -26,7 +26,7 @@ class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
 	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
 
-	void _read_gradient(LOTNode *node, VGPath *path);
+	void _read_gradient(LOTNode *node, VGPath *path, bool p_is_line);
 	/* The LayerNode can contain list of child layer node
    or a list of render node which will be having the 
    path and fill information.
