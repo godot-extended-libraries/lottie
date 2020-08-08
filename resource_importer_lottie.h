@@ -304,15 +304,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	AnimationPlayer *ap = memnew(AnimationPlayer);
 	Ref<Animation> animation;
 	animation.instance();
-	float accumulate = 0.0f;
-	float hertz = 1.0f / lottie->frameRate();
 	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
-		if (accumulate > hertz * 2.0f) {
-			accumulate = 0.0f;
-		} else if (frame_i) {
-			accumulate += float(frame_i + 0) * hertz;
-			continue;
-		}
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
 		VGPath *frame_root = memnew(VGPath());
 		frame_root->set_name(itos(frame_i));
@@ -324,6 +316,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		frame_root->set_renderer(renderer);
 		int32_t track = animation->get_track_count();
 		animation->add_track(Animation::TYPE_VALUE);
+		float hertz = 1.0f / lottie->frameRate();
 		animation->set_length((lottie->totalFrame() - 1) * hertz);
 		animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":visible");
 		animation->track_set_interpolation_type(track, Animation::INTERPOLATION_NEAREST);
