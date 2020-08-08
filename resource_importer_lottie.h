@@ -322,7 +322,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 		animation->track_insert_key(track, float(frame_i + 0) * hertz, true);
 		animation->track_insert_key(track, float(frame_i + 1) * hertz, false);
 		_visit_layer_node(tree, root, frame_root);
-		frame_root->set_scale(Vector2(1000.f, 1000.f));
+		frame_root->set_scale(Vector2(500.0f, 500.0f));
 		frame_root->set_display_folded(true);
 	}
 	animation->set_loop(true);
