@@ -159,16 +159,16 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			// 	Efl_Gfx_Cap cap;
 			switch (node->mStroke.cap) {
 				case CapFlat:
-					print_line("{CapFlat}");
+					print_verbose("{CapFlat}");
 					break;
 				case CapSquare:
-					print_line("{CapSquare}");
+					print_verbose("{CapSquare}");
 					break;
 				case CapRound:
-					print_line("{CapRound}");
+					print_verbose("{CapRound}");
 					break;
 				default:
-					print_line("{CapFlat}");
+					print_verbose("{CapFlat}");
 					break;
 			}
 
