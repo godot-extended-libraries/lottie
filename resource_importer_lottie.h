@@ -293,7 +293,7 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	VGPath *root = memnew(VGPath());
 	String base_name = p_source_file.get_file().get_basename();
 	root->set_name(base_name);
-	Ref<VGMeshRenderer> renderer;
+	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
