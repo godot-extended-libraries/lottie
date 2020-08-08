@@ -261,9 +261,6 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	ERR_FAIL_COND_V(w == 0, FAILED);
 	ERR_FAIL_COND_V(h == 0, FAILED);
 	VGPath *root = memnew(VGPath);
-	float scale = MIN(MAX(w, h), 512) / float(w);
-	w = scale * h;
-	h = scale * w;
 	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
