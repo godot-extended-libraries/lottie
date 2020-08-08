@@ -15,10 +15,10 @@
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
 #include "thirdparty/tove/tove2d/src/cpp/graphics.h"
 #include "thirdparty/tove/vector_graphics_adaptive_renderer.h"
+#include "thirdparty/tove/vector_graphics_color.h"
 #include "thirdparty/tove/vector_graphics_editor.h"
 #include "thirdparty/tove/vector_graphics_path.h"
 #include "thirdparty/tove/vector_graphics_texture_renderer.h"
-#include "thirdparty/tove/vector_graphics_color.h"
 
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
@@ -73,8 +73,6 @@ void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer, Node *
 	if (layer->mAlpha == 0) {
 		return;
 	}
-
-	VGPath *path = memnew(VGPath);
 	//Is this layer a container layer?
 	for (unsigned int i = 0; i < layer->mLayerList.size; i++) {
 		LOTLayerNode *clayer = layer->mLayerList.ptr[i];
@@ -299,11 +297,32 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	renderer.instance();
 	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
-	for (int32_t frame_i = 0; frame_i < 1; frame_i++) {
+	AnimationPlayer *ap = memnew(AnimationPlayer);
+	Ref<Animation> animation;
+	animation.instance();
+	for (int32_t frame_i = 0; frame_i < lottie->frameRate(); frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
-		_visit_layer_node(tree, root, root);
+		VGPath *frame_root = memnew(VGPath());
+		frame_root->set_name(itos(frame_i));
+		root->add_child(frame_root);
+		frame_root->set_owner(root);
+		if (frame_i) {
+			frame_root->set_visible(false);
+		}
+		int32_t track = animation->get_track_count();
+		animation->add_track(Animation::TYPE_VALUE);
+		animation->set_length(lottie->totalFrame() / lottie->frameRate());
+		animation->track_set_path(track, String(root->get_path_to(frame_root)) + ":visible");
+		animation->track_set_interpolation_type(track, Animation::INTERPOLATION_NEAREST);
+		animation->track_insert_key(track, float(frame_i - 1) / lottie->frameRate(), false);
+		animation->track_insert_key(track, float(frame_i) / lottie->frameRate(), true);
+		animation->track_insert_key(track, float(frame_i + 1) / lottie->frameRate(), false);
+		_visit_layer_node(tree, root, frame_root);
 	}
 	root->set_dirty(true);
+	ap->add_animation("Default", animation);
+	root->add_child(ap);
+	ap->set_owner(root);
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);
