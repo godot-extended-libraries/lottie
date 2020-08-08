@@ -325,9 +325,8 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 			frame->set_visible(false);
 		}
 	}
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
-		animation->track_insert_key(track, float(frame_i) * hertz, frame_i);
-	}
+	animation->track_insert_key(track, float(0) * hertz, 0);
+	animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, lottie->totalFrame() - 1);
 	animation->set_loop(true);
 	root->set_dirty(true);
 	ap->add_animation("Default", animation);
