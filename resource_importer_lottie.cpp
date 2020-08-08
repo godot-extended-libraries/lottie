@@ -203,8 +203,6 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 			break;
 		}
 		case LOTGradientType::GradientRadial: {
-			//TODO 
-			return;
 			print_verbose("{GradientRadial}");
 			Ref<VGRadialGradient> vg_gradient;
 			vg_gradient.instance();
@@ -216,7 +214,7 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 			center.x = node->mGradient.focal.x;
 			center.y = node->mGradient.focal.y;
 			vg_gradient->set_focal(focal);
-			float radius = node->mGradient.fradius;
+			float radius = node->mGradient.cradius;
 			vg_gradient->set_radius(radius);
 			vg_gradient->set_color_ramp(color_ramp);
 			path->set_fill_color(vg_gradient);
