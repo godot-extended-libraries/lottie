@@ -87,7 +87,6 @@ void ResourceImporterLottie::_visit_layer_node(const LOTLayerNode *layer, Node *
 }
 
 void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node *p_owner, Node *p_current_node) {
-	tove::GraphicsRef tove_graphics = tove::tove_make_shared<tove::Graphics>();
 	for (uint32_t i = 0; i < layer->mNodeList.size; i++) {
 		tove::PathRef path_ref = tove::tove_make_shared<tove::Path>();
 		LOTNode *node = layer->mNodeList.ptr[i];
@@ -99,7 +98,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		if (node->mStroke.enable && node->mStroke.width == 0) {
 			continue;
 		}
-		path_ref->setLineWidth(node->mStroke.width);
 
 		tove::SubpathRef subpath_ref = std::make_shared<tove::Subpath>();
 
@@ -141,7 +139,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		//1: Stroke
 		if (node->mStroke.enable) {
 			// 	Stroke Width
-			// 	efl_gfx_shape_stroke_width_set(shape, node->mStroke.width);
+			path_ref->setLineWidth(node->mStroke.width);
 
 			// 	Stroke Cap
 			// 	Efl_Gfx_Cap cap;
