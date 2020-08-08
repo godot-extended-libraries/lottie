@@ -111,6 +111,7 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			switch (node->mPath.elmPtr[i]) {
 				case 0: {
 					path_print = "{MoveTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
+					subpath_ref = std::make_shared<tove::Subpath>();
 					subpath_ref->moveTo(data[0], data[1]);
 					data += 2;
 					break;
@@ -129,6 +130,8 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 				}
 				case 3: {
 					path_print = "{close}";
+					path_ref->clean();
+					path_ref->addSubpath(subpath_ref);
 					break;
 				}
 				default:
@@ -138,7 +141,6 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 		}
 		VGPath *path = memnew(VGPath(path_ref));
 		path->set_name(node->keypath);
-		Ref<VGSpriteRenderer> renderer;
 		//1: Stroke
 		if (node->mStroke.enable) {
 			// 	Stroke Width
@@ -234,12 +236,8 @@ void ResourceImporterLottie::_visit_render_node(const LOTLayerNode *layer, Node 
 			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
 			print_line("{FillWinding}");
 		}
-		path_ref->addSubpath(subpath_ref);
-		path_ref->clean();
-		path->set_dirty(true);
 		p_current_node->add_child(path);
 		path->set_owner(p_owner);
-		path->set_dirty(true);
 	}
 }
 
@@ -294,12 +292,18 @@ Error ResourceImporterLottie::import(const String &p_source_file,
 	lottie->size(w, h);
 	ERR_FAIL_COND_V(w == 0, FAILED);
 	ERR_FAIL_COND_V(h == 0, FAILED);
-	VGPath *root = memnew(VGPath);
+	VGPath *root = memnew(VGPath());
+	String base_name = p_source_file.get_file().get_basename();
+	root->set_name(base_name);
+	Ref<VGMeshRenderer> renderer;
+	renderer.instance();
+	root->set_renderer(renderer);
 	ERR_FAIL_COND_V(!lottie->frameRate(), FAILED);
 	for (int32_t frame_i = 0; frame_i < 1; frame_i++) {
 		const LOTLayerNode *tree = lottie->renderTree(frame_i, w, h);
 		_visit_layer_node(tree, root, root);
 	}
+	root->set_dirty(true);
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);

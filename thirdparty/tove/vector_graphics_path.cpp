@@ -780,23 +780,6 @@ void VGPath::set_tove_path(tove::PathRef p_path) {
 VGPath::VGPath() {
 	tove_path = tove::tove_make_shared<tove::Path>();
 	set_notify_transform(true);
-
-	// when created as a unique item from the UI, populate with default content.
-
-	Ref<VGMeshRenderer> renderer;
-	renderer.instance();
-	set_renderer(renderer);
-
-	tove::SubpathRef tove_subpath = tove::tove_make_shared<tove::Subpath>();
-	tove_subpath->drawEllipse(0, 0, 100, 100);
-	tove_path->addSubpath(tove_subpath);
-
-	tove_path->setFillColor(tove::tove_make_shared<tove::Color>(0.8, 0.1, 0.1));
-	tove_path->setLineColor(tove::tove_make_shared<tove::Color>(0, 0, 0));
-	create_fill_color();
-	create_line_color();
-
-	set_dirty();
 }
 
 VGPath::VGPath(tove::PathRef p_path) {
