@@ -5,7 +5,6 @@
 #include "register_types.h"
 #include "core/io/resource_importer.h"
 #include "resource_importer_lottie.h"
-#include "resource_importer_lottie_sprite.h"
 #include "thirdparty/tove/vector_graphics_adaptive_renderer.h"
 #include "thirdparty/tove/vector_graphics_color.h"
 #include "thirdparty/tove/vector_graphics_gradient.h"
@@ -48,10 +47,6 @@ void register_lottie_types() {
 	Ref<ResourceImporterLottie> lottie_spatial_loader;
 	lottie_spatial_loader.instance();
 	ResourceFormatImporter::get_singleton()->add_importer(lottie_spatial_loader);
-
-	Ref<ResourceImporterLottieSprite> lottie_sprite_loader;
-	lottie_sprite_loader.instance();
-	ResourceFormatImporter::get_singleton()->add_importer(lottie_sprite_loader);
 
 	Ref<ResourceImporterSVGVGPath> svg_vg_path_loader;
 	svg_vg_path_loader.instance();
