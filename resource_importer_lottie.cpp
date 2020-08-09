@@ -231,7 +231,7 @@ String ResourceImporterLottie::get_importer_name() const {
 }
 
 String ResourceImporterLottie::get_visible_name() const {
-	return "LOTTIE";
+	return "LottieVGPath";
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
