@@ -227,11 +227,11 @@ void ResourceImporterLottie::_read_gradient(LOTNode *node, VGPath *path) {
 }
 
 String ResourceImporterLottie::get_importer_name() const {
-	return "lottievgpath";
+	return "lottie";
 }
 
 String ResourceImporterLottie::get_visible_name() const {
-	return "LottieVGPath";
+	return "LOTTIE";
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
