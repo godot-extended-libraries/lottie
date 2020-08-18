@@ -48,6 +48,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	Ref<VGSpriteRenderer> renderer;
 	renderer.instance();
 	root->set_renderer(renderer);
+	renderer->set_quality(0.7f);
 	VGPathAnimation *frame_root = memnew(VGPathAnimation());
 	root->add_child(frame_root);
 	frame_root->set_owner(root);
