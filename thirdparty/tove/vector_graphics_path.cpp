@@ -822,6 +822,7 @@ void configureVectorSprite(Node *p_child, Ref<Resource> p_resource) {
 
 void VGPathAnimation::set_data(String p_json) {
 	data = p_json;
+	lottie = rlottie::Animation::loadFromData(get_data().utf8().ptrw(), "", "", false);
 }
 
 String VGPathAnimation::get_data() const {
@@ -833,8 +834,6 @@ int32_t VGPathAnimation::get_frame() const {
 }
 
 void VGPathAnimation::set_frame(int frame) {
-	std::unique_ptr<rlottie::Animation> lottie =
-			rlottie::Animation::loadFromData(get_data().utf8().ptrw(), (get_data().md5_text() + itos(get_frame())).utf8().ptr());
 	ERR_FAIL_COND(!lottie);
 	size_t w = 0;
 	size_t h = 0;
@@ -849,7 +848,10 @@ void VGPathAnimation::set_frame(int frame) {
 
 void VGPathAnimation::clear() {
 	for (int32_t i = 0; i < get_child_count(); i++) {
-		get_child(i)->queue_delete();
+		VGPath * path = cast_to<VGPath>(get_child(i));
+		ERR_CONTINUE(!path);
+		path->set_visible(false);
+		path->queue_delete();
 	}
 }
 

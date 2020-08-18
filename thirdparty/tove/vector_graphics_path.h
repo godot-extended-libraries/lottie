@@ -116,6 +116,7 @@ class VGPathAnimation : public VGPath {
 	GDCLASS(VGPathAnimation, VGPath);
 	int frame = 0;
 	int frame_count = 0;
+	std::unique_ptr<rlottie::Animation> lottie = nullptr;
 
 	void _reown(Node *p_owner, Node *p_current) {
 		p_current->set_owner(p_owner);
