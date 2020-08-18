@@ -834,7 +834,7 @@ int32_t VGPathAnimation::get_frame() const {
 
 void VGPathAnimation::set_frame(int frame) {
 	std::unique_ptr<rlottie::Animation> lottie =
-			rlottie::Animation::loadFromData(get_data().utf8().ptrw(), String(String(get_path()) + itos(get_frame())).utf8().ptr());
+			rlottie::Animation::loadFromData(get_data().utf8().ptrw(), (get_data().md5_text() + itos(get_frame())).utf8().ptr());
 	ERR_FAIL_COND(!lottie);
 	size_t w = 0;
 	size_t h = 0;
