@@ -833,17 +833,24 @@ int32_t VGPathAnimation::get_frame() const {
 	return frame;
 }
 
-void VGPathAnimation::set_frame(int frame) {
-	ERR_FAIL_COND(!lottie);
-	size_t w = 0;
-	size_t h = 0;
-	lottie->size(w, h);
-	ERR_FAIL_COND(w == 0);
-	ERR_FAIL_COND(h == 0);
-	ERR_FAIL_COND(!lottie->totalFrame());
-	clear();
-	const LOTLayerNode *tree = lottie->renderTree(frame, w, h);
-	_visit_layer_node(tree, get_owner(), this);
+void VGPathAnimation::set_frame(int p_frame) {
+	frame = p_frame;
+	set_dirty();
+}
+
+void VGPathAnimation::_notification(int p_what) {
+	if (p_what == VGPath::NOTIFICATION_DRAW) {
+		ERR_FAIL_COND(!lottie);
+		size_t w = 0;
+		size_t h = 0;
+		lottie->size(w, h);
+		ERR_FAIL_COND(w == 0);
+		ERR_FAIL_COND(h == 0);
+		ERR_FAIL_COND(!lottie->totalFrame());
+		clear();
+		const LOTLayerNode *tree = lottie->renderTree(get_frame(), w, h);
+		_visit_layer_node(tree, get_owner(), this);
+	}
 }
 
 void VGPathAnimation::clear() {

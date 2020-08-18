@@ -137,13 +137,17 @@ class VGPathAnimation : public VGPath {
 
 protected:
 	static void _bind_methods();
+	void _notification(int p_what);
 
 public:
 	void set_data(String p_json);
 	String get_data() const;
 	int32_t get_frame() const;
 	void set_frame(int frame);
-	void clear();
+	void clear();	
+	VGPathAnimation() {
+		set_physics_process_internal(true);
+	}
 };
 
 #endif // VG_PATH_H
