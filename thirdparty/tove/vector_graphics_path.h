@@ -117,14 +117,6 @@ class VGPathAnimation : public VGPath {
 	int frame = 0;
 	int frame_count = 0;
 	std::unique_ptr<rlottie::Animation> lottie = nullptr;
-
-	void _reown(Node *p_owner, Node *p_current) {
-		p_current->set_owner(p_owner);
-		for (int32_t i = 0; i < p_current->get_child_count(); i++) {
-			Node *node = p_current->get_child(i);
-			_reown(p_owner, node);
-		}
-	}
 	String data;
 	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
 	void _read_gradient(LOTNode *node, VGPath *path);
