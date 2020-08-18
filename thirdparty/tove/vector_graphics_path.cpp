@@ -716,7 +716,6 @@ tove::GraphicsRef VGPath::get_subtree_graphics() const {
 Node2D *VGPath::create_mesh_node() {
 	Ref<VGRenderer> renderer = get_inherited_renderer();
 	if (renderer.is_valid()) {
-
 		if (renderer->prefer_sprite()) {
 			Sprite *sprite = memnew(Sprite);
 			sprite->set_texture(renderer->render_texture(this, true));
@@ -819,4 +818,294 @@ void configureVectorSprite(Node *p_child, Ref<Resource> p_resource) {
 		editor_data->get_undo_redo().add_do_reference(p_child);
 	}
 #endif
+}
+
+void VGPathAnimation::set_data(String p_json) {
+	data = p_json;
+}
+
+String VGPathAnimation::get_data() const {
+	return data;
+}
+
+int32_t VGPathAnimation::get_frame() const {
+	return frame;
+}
+
+void VGPathAnimation::set_frame(int frame) {
+	std::unique_ptr<rlottie::Animation> lottie =
+			rlottie::Animation::loadFromData(get_data().utf8().ptrw(), String(String(get_path()) + itos(get_frame())).utf8().ptr());
+	ERR_FAIL_COND(!lottie);
+	size_t w = 0;
+	size_t h = 0;
+	lottie->size(w, h);
+	ERR_FAIL_COND(w == 0);
+	ERR_FAIL_COND(h == 0);
+	ERR_FAIL_COND(!lottie->totalFrame());
+	clear();
+	const LOTLayerNode *tree = lottie->renderTree(frame, w, h);
+	_visit_layer_node(tree, get_owner(), this);
+}
+
+void VGPathAnimation::clear() {
+	for (int32_t i = 0; i < get_child_count(); i++) {
+		get_child(i)->queue_delete();
+	}
+}
+
+void VGPathAnimation::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("clear"), &VGPathAnimation::clear);
+	ClassDB::bind_method(D_METHOD("set_frame", "frame"), &VGPathAnimation::set_frame);
+	ClassDB::bind_method(D_METHOD("get_frame"), &VGPathAnimation::get_frame);
+	ClassDB::bind_method(D_METHOD("set_data", "json"), &VGPathAnimation::set_data);
+	ClassDB::bind_method(D_METHOD("get_data"), &VGPathAnimation::get_data);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "data"), "set_data", "get_data");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "frame"), "set_frame", "get_frame");
+}
+
+void VGPathAnimation::_visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node) {
+	for (uint32_t i = 0; i < layer->mNodeList.size; i++) {
+		tove::PathRef path_ref = tove::tove_make_shared<tove::Path>();
+		LOTNode *node = layer->mNodeList.ptr[i];
+		if (!node) {
+			continue;
+		}
+
+		//Skip Invisible Stroke?
+		if (node->mStroke.enable && node->mStroke.width == 0) {
+			continue;
+		}
+
+		tove::SubpathRef subpath_ref = std::make_shared<tove::Subpath>();
+
+		const float *data = node->mPath.ptPtr;
+		if (!data) {
+			continue;
+		}
+		for (size_t i = 0; i < node->mPath.elmCount; i++) {
+			String path_print;
+			switch (node->mPath.elmPtr[i]) {
+				case 0: {
+					path_print = "{MoveTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
+					subpath_ref = std::make_shared<tove::Subpath>();
+					subpath_ref->moveTo(data[0], data[1]);
+					data += 2;
+					break;
+				}
+				case 1: {
+					path_print = "{LineTo : (" + rtos(data[0]) + " " + rtos(data[1]) + ")}";
+					subpath_ref->lineTo(data[0], data[1]);
+					data += 2;
+					break;
+				}
+				case 2: {
+					path_print = "{CubicTo : c1(" + rtos(data[0]) + " " + rtos(data[1]) + ") c2(" + rtos(data[2]) + " " + rtos(data[3]) + ") e(" + rtos(data[4]) + " " + rtos(data[5]) + ")}";
+					subpath_ref->curveTo(data[0], data[1], data[2], data[3], data[4], data[5]);
+					data += 6;
+					break;
+				}
+				case 3: {
+					path_print = "{close}";
+					path_ref->addSubpath(subpath_ref);
+					break;
+				}
+				default:
+					break;
+			}
+			print_verbose(path_print);
+		}
+		VGPath *path = memnew(VGPath(path_ref));
+		String name = node->keypath;
+		if (!name.empty()) {
+			path->set_name(name);
+		}
+		//1: Stroke
+		if (node->mStroke.enable) {
+			// 	Stroke Width
+			path->set_line_width(node->mStroke.width);
+			float r = node->mColor.r;
+			r /= 255.0f;
+			float g = node->mColor.g;
+			g /= 255.0f;
+			float b = node->mColor.b;
+			b /= 255.0f;
+			float a = node->mColor.a;
+			a /= 255.0f;
+			Ref<VGColor> vg_color;
+			vg_color.instance();
+			vg_color->set_color(Color(r, g, b, a));
+			path->set_line_color(vg_color);
+			// 	Stroke Cap
+			// 	Efl_Gfx_Cap cap;
+			switch (node->mStroke.cap) {
+				case CapFlat:
+					print_verbose("{CapFlat}");
+					break;
+				case CapSquare:
+					print_verbose("{CapSquare}");
+					break;
+				case CapRound:
+					print_verbose("{CapRound}");
+					break;
+				default:
+					print_verbose("{CapFlat}");
+					break;
+			}
+			//Stroke Join
+			switch (node->mStroke.join) {
+				case LOTJoinStyle::JoinMiter:
+					print_verbose("{JoinMiter}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
+					break;
+				case LOTJoinStyle::JoinBevel:
+					print_verbose("{JoinBevel}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_BEVEL);
+					break;
+				case LOTJoinStyle::JoinRound:
+					print_verbose("{JoinRound}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_ROUND);
+					break;
+				default:
+					print_verbose("{JoinMiter}");
+					path_ref->setLineJoin(TOVE_LINEJOIN_MITER);
+					break;
+			}
+			//Stroke Dash
+			if (node->mStroke.dashArraySize > 0) {
+				for (int i = 0; i <= node->mStroke.dashArraySize; i += 2) {
+					print_verbose("{(length, gap) : (" + rtos(node->mStroke.dashArray[i]) + " " + rtos(node->mStroke.dashArray[i + 1]) + ")}");
+				}
+				path_ref->setLineDash(node->mStroke.dashArray, node->mStroke.dashArraySize);
+			}
+		}
+		//Fill Method
+		switch (node->mBrushType) {
+			case BrushSolid: {
+				float r = node->mColor.r;
+				r /= 255.0f;
+				float g = node->mColor.g;
+				g /= 255.0f;
+				float b = node->mColor.b;
+				b /= 255.0f;
+				float a = node->mColor.a;
+				a /= 255.0f;
+				Ref<VGColor> vg_color;
+				vg_color.instance();
+				vg_color->set_color(Color(r, g, b, a));
+				path->set_fill_color(vg_color);
+				path->set_line_color(vg_color);
+				print_verbose("{BrushSolid}");
+			} break;
+			case BrushGradient: {
+				_read_gradient(node, path);
+
+			} break;
+			default:
+				break;
+		}
+
+		//Fill Rule
+		if (node->mFillRule == LOTFillRule::FillEvenOdd) {
+			path_ref->setFillRule(TOVE_FILLRULE_EVEN_ODD);
+			print_verbose("{FillEvenOdd}");
+		} else if (node->mFillRule == LOTFillRule::FillWinding) {
+			path_ref->setFillRule(TOVE_FILLRULE_NON_ZERO);
+			print_verbose("{FillWinding}");
+		}
+		p_current_node->add_child(path);
+		path->set_owner(p_owner);
+	}
+}
+
+void VGPathAnimation::_read_gradient(LOTNode *node, VGPath *path) {
+	if (!node->mGradient.stopPtr) {
+	}
+	Ref<Gradient> color_ramp;
+	color_ramp.instance();
+	Vector<Gradient::Point> points;
+	for (int32_t stop_i = 0; stop_i < node->mGradient.stopCount; stop_i++) {
+		LOTGradientStop stop = node->mGradient.stopPtr[stop_i];
+		float r = stop.r;
+		r /= 255.0f;
+		float g = stop.g;
+		g /= 255.0f;
+		float b = stop.b;
+		b /= 255.0f;
+		float a = stop.a;
+		a /= 255.0f;
+		Gradient::Point p;
+		p.offset = stop.pos;
+		p.color = Color(r, g, b, a);
+		points.push_back(p);
+	}
+	color_ramp->set_points(points);
+	switch (node->mGradient.type) {
+		case LOTGradientType::GradientLinear: {
+			print_verbose("{GradientLinear}");
+			Ref<VGLinearGradient> vg_gradient;
+			vg_gradient.instance();
+			vg_gradient->set_color_ramp(color_ramp);
+			vg_gradient->set_p1(Vector2(node->mGradient.start.x, node->mGradient.start.y));
+			vg_gradient->set_p2(Vector2(node->mGradient.end.x, node->mGradient.end.y));
+			path->set_fill_color(vg_gradient);
+			path->set_line_color(vg_gradient);
+			break;
+		}
+		case LOTGradientType::GradientRadial: {
+			print_verbose("{GradientRadial}");
+			Ref<VGRadialGradient> vg_gradient;
+			vg_gradient.instance();
+			Vector2 center;
+			center.x = node->mGradient.center.x;
+			center.y = node->mGradient.center.y;
+			vg_gradient->set_center(center);
+			Vector2 focal;
+			center.x = node->mGradient.focal.x;
+			center.y = node->mGradient.focal.y;
+			vg_gradient->set_focal(focal);
+			float radius = node->mGradient.cradius;
+			vg_gradient->set_radius(radius);
+			vg_gradient->set_color_ramp(color_ramp);
+			path->set_fill_color(vg_gradient);
+			path->set_line_color(vg_gradient);
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+/* The LayerNode can contain list of child layer node
+   or a list of render node which will be having the 
+   path and fill information.
+   so visit_layer_node() checks if it is a composite layer
+   then it calls visit_layer_node() for all its child layer
+   otherwise calls visit_render_node() which try to visit all
+   the nodes present in the NodeList.
+
+   Note: renderTree() was only meant for internal use and only c structs
+   for not duplicating the data. so never save the raw pointers.
+   If possible try to avoid using it. 
+
+   https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668 */
+
+inline void VGPathAnimation::_visit_layer_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node) {
+	if (!layer->mVisible) {
+		return;
+	}
+	//Don't need to update it anymore since its layer is invisible.
+	if (layer->mAlpha == 0) {
+		return;
+	}
+	//Is this layer a container layer?
+	for (unsigned int i = 0; i < layer->mLayerList.size; i++) {
+		LOTLayerNode *clayer = layer->mLayerList.ptr[i];
+		_visit_layer_node(clayer, p_owner, p_current_node);
+	}
+
+	//visit render nodes.
+	if (layer->mNodeList.size > 0) {
+		_visit_render_node(layer, p_owner, p_current_node);
+	}
 }

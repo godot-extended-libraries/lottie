@@ -5,10 +5,21 @@
 #ifndef VG_PATH_H
 #define VG_PATH_H
 
-#include "utils.h"
 #include "scene/2d/mesh_instance_2d.h"
+#include "utils.h"
 #include "vector_graphics_paint.h"
 #include "vector_graphics_renderer.h"
+
+#include "thirdparty/rlottie/inc/rlottie.h"
+#include "thirdparty/rlottie/inc/rlottiecommon.h"
+#include "thirdparty/tove/tove2d/src/cpp/graphics.h"
+#include "thirdparty/tove/vector_graphics_adaptive_renderer.h"
+#include "thirdparty/tove/vector_graphics_color.h"
+#include "thirdparty/tove/vector_graphics_editor.h"
+#include "thirdparty/tove/vector_graphics_linear_gradient.h"
+#include "thirdparty/tove/vector_graphics_path.h"
+#include "thirdparty/tove/vector_graphics_radial_gradient.h"
+#include "thirdparty/tove/vector_graphics_texture_renderer.h"
 
 class VGPath : public Node2D {
 	GDCLASS(VGPath, Node2D);
@@ -27,7 +38,7 @@ class VGPath : public Node2D {
 
 	static void set_inherited_dirty(Node *p_node);
 	static void compose_graphics(const tove::GraphicsRef &p_tove_graphics,
-		const Transform2D &p_transform, const Node *p_node);
+			const Transform2D &p_transform, const Node *p_node);
 	static void _transform_changed(Node *p_node);
 
 	bool inherits_renderer() const;
@@ -63,7 +74,7 @@ public:
 	VGPath *get_root_path();
 	Ref<VGRenderer> get_inherited_renderer() const;
 
- 	Ref<VGRenderer> get_renderer();
+	Ref<VGRenderer> get_renderer();
 	void set_renderer(const Ref<VGRenderer> &p_renderer);
 
 	Ref<VGPaint> get_fill_color() const;
@@ -85,7 +96,7 @@ public:
 	int get_num_subpaths() const;
 	tove::SubpathRef get_subpath(int p_subpath) const;
 	tove::PathRef get_tove_path() const;
-    tove::GraphicsRef get_subtree_graphics() const;
+	tove::GraphicsRef get_subtree_graphics() const;
 
 	void set_dirty(bool p_children = false);
 	void set_tove_path(tove::PathRef p_path);
@@ -101,7 +112,6 @@ public:
 	void import_svg(const String &p_path);
 };
 
-
 class VGPathAnimation : public VGPath {
 	GDCLASS(VGPathAnimation, VGPath);
 	int frame = 0;
@@ -114,44 +124,33 @@ class VGPathAnimation : public VGPath {
 			_reown(p_owner, node);
 		}
 	}
+	String data;
+	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
+	void _read_gradient(LOTNode *node, VGPath *path);
+	/* The LayerNode can contain list of child layer node
+   or a list of render node which will be having the 
+   path and fill information.
+   so visit_layer_node() checks if it is a composite layer
+   then it calls visit_layer_node() for all its child layer
+   otherwise calls visit_render_node() which try to visit all
+   the nodes present in the NodeList.
+
+   Note: renderTree() was only meant for internal use and only c structs
+   for not duplicating the data. so never save the raw pointers.
+   If possible try to avoid using it. 
+
+   https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668 */
+	void _visit_layer_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
 
 protected:
-	static void _bind_methods() {
-		ClassDB::bind_method(D_METHOD("clear"), &VGPathAnimation::clear);
-		ClassDB::bind_method(D_METHOD("set_frame", "frame"), &VGPathAnimation::set_frame);
-		ClassDB::bind_method(D_METHOD("get_frame"), &VGPathAnimation::get_frame);
-
-		ADD_PROPERTY(PropertyInfo(Variant::INT, "frame"), "set_frame", "get_frame");
-	}
+	static void _bind_methods();
 
 public:
-	int32_t get_frame()const {
-		return frame;
-	}
-	void set_frame(int frame) {
-		Node *current_frame = Object::cast_to<Node>(get_node_or_null(itos(frame)));
-		if (!current_frame) {
-			return;
-		}
-		for (int32_t i = 0; i < get_child_count(); i++) {
-			Node2D *node = Object::cast_to<Node2D>(get_child(i));
-			ERR_CONTINUE(!node);
-			node->set_visible(false);
-		}
-		current_frame->call("set_visible", true);
-	}
-	void add_frame(Node* p_frame) {
-		p_frame->set_name(itos(frame_count));
-		add_child(p_frame);
-		_reown(get_owner(), p_frame);
-		frame_count++;
-	}
-	void clear() {
-		for (int32_t i = 0; i < get_child_count(); i++) {
-			get_child(i)->queue_delete();
-		}
-		frame_count = 0;
-	}
+	void set_data(String p_json);
+	String get_data() const;
+	int32_t get_frame() const;
+	void set_frame(int frame);
+	void clear();
 };
 
 #endif // VG_PATH_H
