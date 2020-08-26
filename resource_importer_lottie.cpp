@@ -66,7 +66,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	animation->set_length((lottie->totalFrame() - 1) * hertz);
 	animation->track_set_path(track, frame_root_path);
 	animation->track_insert_key(track, 0, 0);
-	animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, lottie->totalFrame() - 1);
+	float frame = lottie->totalFrame() - 1;
+	animation->track_insert_key(track, frame * hertz, frame);
 	animation->set_loop(true);
 	ap->add_animation("Default", animation);
 	root->add_child(ap);
