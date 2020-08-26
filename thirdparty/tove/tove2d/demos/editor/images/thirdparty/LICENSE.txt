@@ -1,7 +1,0 @@
-- cursor.svg
-from: from David Merfield's http://publicicons.org/
-license: public domain
-
-- pencil.svg
-from: https://commons.wikimedia.org/wiki/File:Black_pencil.svg
-license: public domain

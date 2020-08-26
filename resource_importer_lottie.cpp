@@ -1,8 +1,10 @@
 #include "resource_importer_lottie.h"
+
 #include "core/io/file_access_pack.h"
+#include "scene/2d/animated_sprite.h"
+
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
-#include "thirdparty/tove/vector_graphics_path.h"
 
 String ResourceImporterLottie::get_preset_name(int p_idx) const {
 	return String();
@@ -16,11 +18,11 @@ bool ResourceImporterLottie::get_option_visibility(const String &p_option, const
 }
 
 String ResourceImporterLottie::get_importer_name() const {
-	return "lottie";
+	return "Lottie AnimatedSprite";
 }
 
 String ResourceImporterLottie::get_visible_name() const {
-	return "LottieVGPath";
+	return "LottieAnimatedSprite";
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
@@ -44,34 +46,56 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	Error err;
 	String data = file->get_file_as_string(p_source_file, &err);
 	ERR_FAIL_COND_V(err != Error::OK, FAILED);
-	VGPath *root = memnew(VGPath);
-	Ref<VGSpriteRenderer> renderer;
-	renderer.instance();
-	root->set_renderer(renderer);
-	renderer->set_quality(0.7f);
-	VGPathAnimation *frame_root = memnew(VGPathAnimation());
-	root->add_child(frame_root);
-	frame_root->set_owner(root);
-	frame_root->set_data(data);
-	String frame_root_path = String(root->get_path_to(frame_root)) + ":frame";
-	AnimationPlayer *ap = memnew(AnimationPlayer);
-	Ref<Animation> animation;
-	animation.instance();
 	std::unique_ptr<rlottie::Animation> lottie =
-			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
+	rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
 	ERR_FAIL_COND_V(!lottie, FAILED);
-	float hertz = 1.0f / lottie->frameRate();
-	int32_t track = animation->get_track_count();
-	animation->add_track(Animation::TYPE_VALUE);
-	animation->set_length((lottie->totalFrame() - 1) * hertz);
-	animation->track_set_path(track, frame_root_path);
-	animation->track_insert_key(track, 0, 0);
-	float frame = lottie->totalFrame() - 1;
-	animation->track_insert_key(track, frame * hertz, frame);
-	animation->set_loop(true);
-	ap->add_animation("Default", animation);
-	root->add_child(ap);
-	ap->set_owner(root);
+	size_t width = 0;
+	size_t height = 0;
+	lottie->size(width, height);
+	ERR_FAIL_COND_V(width == 0, FAILED);
+	ERR_FAIL_COND_V(height == 0, FAILED);
+	Node2D *root = memnew(Node2D);
+	AnimatedSprite *sprite = memnew(AnimatedSprite);
+	root->add_child(sprite);
+	sprite->set_owner(root);
+	Ref<QuadMesh> mesh;
+	mesh.instance();
+	Ref<Image> img;
+	img.instance();
+	Ref<SpriteFrames> frames;
+	frames.instance();
+	List<StringName> animations;
+	frames->get_animation_list(&animations);
+	String name = animations[0];
+	frames->set_animation_speed(name, lottie->frameRate());
+	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+		Vector<uint32_t> buffer;
+		buffer.resize(width * height);
+		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
+		lottie->renderSync(frame_i, surface);
+		PoolByteArray pixels;
+		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
+		pixels.resize(buffer_byte_size);
+		PoolByteArray::Write pixel_write = pixels.write();
+		memcpy(pixel_write.ptr(), buffer.ptr(), buffer_byte_size);
+		for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
+			uint8_t r = pixels[pixel_i + 2];
+			uint8_t g = pixels[pixel_i + 1];
+			uint8_t b = pixels[pixel_i + 0];
+			pixel_write[pixel_i + 2] = b;
+			pixel_write[pixel_i + 1] = g;
+			pixel_write[pixel_i + 0] = r;
+		}
+		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
+		img->unlock();
+		img->generate_mipmaps();
+		img->lock();
+		Ref<ImageTexture> image_tex;
+		image_tex.instance();
+		image_tex->create_from_image(img);
+		frames->add_frame(name, image_tex);
+	}
+	sprite->set_sprite_frames(frames);
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);

@@ -21,40 +21,5 @@ env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vec
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
 
-import os 
-dir_path = Dir('.').abspath
-
-env_lottie.Append(CXXFLAGS=[
-    '-DTOVE_GODOT',
-    '-I' + os.path.join(dir_path, 'thirdparty/tove/tove2d/src/thirdparty/fp16/include')])
-
-def package_sl(target, source, env):
-	with open(source[0].abspath, "r") as sl:
-		with open(target[0].abspath, "w") as out:
-			out.write('w << R"GLSL(\n')
-			out.write(sl.read())
-			out.write(')GLSL";\n')
-
-env_lottie.Append(BUILDERS={
-	'PackageSL':Builder(action=package_sl)})
-
-env_lottie.PackageSL(
-	'thirdparty/tove/tove2d/src/glsl/fill.frag.inc',
-	Glob('thirdparty/tove/tove2d/src/glsl/fill.frag'))
-
-env_lottie.PackageSL(
-	'thirdparty/tove/tove2d/src/glsl/line.vert.inc',
-	Glob('thirdparty/tove/tove2d/src/glsl/line.vert'))
-
-env_thirdparty = env_lottie.Clone()
-env_thirdparty.disable_warnings()
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/mesh/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/shader/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/gpux/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/polypartition/src/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/tinyxml2/tinyxml2.cpp")
-
 env_lottie.add_source_files(env.modules_sources, "*.cpp")
 env_lottie.add_source_files(env.modules_sources, "thirdparty/tove/*.cpp")
