@@ -52,8 +52,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	size_t width = 0;
 	size_t height = 0;
 	lottie->size(width, height);
-	ERR_FAIL_COND_V(width == 0, FAILED);
-	ERR_FAIL_COND_V(height == 0, FAILED);
+	ERR_FAIL_COND_V(!width, FAILED);
+	ERR_FAIL_COND_V(!height, FAILED);
 	AnimatedSprite *root = memnew(AnimatedSprite);
 	Ref<QuadMesh> mesh;
 	mesh.instance();
