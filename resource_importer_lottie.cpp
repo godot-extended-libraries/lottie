@@ -54,10 +54,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	lottie->size(width, height);
 	ERR_FAIL_COND_V(width == 0, FAILED);
 	ERR_FAIL_COND_V(height == 0, FAILED);
-	Node2D *root = memnew(Node2D);
-	AnimatedSprite *sprite = memnew(AnimatedSprite);
-	root->add_child(sprite);
-	sprite->set_owner(root);
+	AnimatedSprite *root = memnew(AnimatedSprite);
 	Ref<QuadMesh> mesh;
 	mesh.instance();
 	Ref<Image> img;
@@ -92,7 +89,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		image_tex->create_from_image(img);
 		frames->add_frame(name, image_tex);
 	}
-	sprite->set_sprite_frames(frames);
+	root->set_sprite_frames(frames);
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);
