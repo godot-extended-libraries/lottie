@@ -22,4 +22,3 @@ env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vec
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
 
 env_lottie.add_source_files(env.modules_sources, "*.cpp")
-env_lottie.add_source_files(env.modules_sources, "thirdparty/tove/*.cpp")
