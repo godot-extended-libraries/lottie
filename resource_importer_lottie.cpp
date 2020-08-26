@@ -87,9 +87,6 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 			pixel_write[pixel_i + 0] = r;
 		}
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		img->unlock();
-		img->generate_mipmaps();
-		img->lock();
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		image_tex->create_from_image(img);
