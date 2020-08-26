@@ -10,6 +10,7 @@ env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/inc'])
 env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/lottie'])
 env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector'])
 env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/freetype'])
+env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/stb'])
 
 env_lottie.Append(CCDEFINES=["RLOTTIE_BUILD"])
 env_lottie.Append(CPPDEFINES=["RLOTTIE_BUILD"])
