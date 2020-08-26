@@ -727,8 +727,6 @@ Node2D *VGPath::create_mesh_node() {
 			}
 			Transform2D t;
 			t.scale(xform.get_scale());
-			Size2 s = xform.get_scale();
-			float scale = MAX(s.width, s.height);
 			sprite->set_transform(get_transform() * t.affine_inverse());
 			sprite->set_name(get_name());
 			sprite->set_centered(false);
