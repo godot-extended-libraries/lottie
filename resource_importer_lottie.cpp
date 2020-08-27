@@ -117,6 +117,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		image_tex->create_from_image(img);
+		img->compress();
 		frames->add_frame(name, image_tex);
 	}
 	root->set_sprite_frames(frames);
