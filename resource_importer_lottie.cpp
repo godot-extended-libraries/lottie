@@ -32,6 +32,8 @@
 
 #include "core/io/file_access_pack.h"
 #include "scene/2d/animated_sprite.h"
+#include "scene/2d/sprite.h"
+#include "scene/3d/sprite_3d.h"
 
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
@@ -41,6 +43,10 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 }
 
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
 }
 
 bool ResourceImporterLottie::get_option_visibility(const String &p_option, const Map<StringName, Variant> &p_options) const {
@@ -48,11 +54,11 @@ bool ResourceImporterLottie::get_option_visibility(const String &p_option, const
 }
 
 String ResourceImporterLottie::get_importer_name() const {
-	return "Lottie AnimatedSprite";
+	return "lottie_sprite";
 }
 
 String ResourceImporterLottie::get_visible_name() const {
-	return "LottieAnimatedSprite";
+	return "Lottie Sprite";
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
@@ -77,18 +83,13 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	String data = file->get_file_as_string(p_source_file, &err);
 	ERR_FAIL_COND_V(err != Error::OK, FAILED);
 	std::unique_ptr<rlottie::Animation> lottie =
-	rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
+			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
 	ERR_FAIL_COND_V(!lottie, FAILED);
 	size_t width = 0;
 	size_t height = 0;
 	lottie->size(width, height);
 	ERR_FAIL_COND_V(!width, FAILED);
 	ERR_FAIL_COND_V(!height, FAILED);
-	AnimatedSprite *root = memnew(AnimatedSprite);
-	Ref<QuadMesh> mesh;
-	mesh.instance();
-	Ref<Image> img;
-	img.instance();
 	Ref<SpriteFrames> frames;
 	frames.instance();
 	List<StringName> animations;
@@ -113,6 +114,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 			pixel_write[pixel_i + 1] = g;
 			pixel_write[pixel_i + 0] = r;
 		}
+		Ref<Image> img;
+		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
@@ -120,17 +123,44 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img->compress();
 		frames->add_frame(name, image_tex);
 	}
-	root->set_sprite_frames(frames);
+	Node *root = nullptr;
+	if (p_options["3d"] && !p_options["animation/import"]) {
+		root = memnew(Sprite3D);
+		Sprite3D *sprite = cast_to<Sprite3D>(root);
+		int32_t frame = p_options["start_frame"];
+		ERR_FAIL_INDEX_V(frame, frames->get_frame_count("default"), FAILED);
+		Ref<Texture> tex = frames->get_frame("default", frame);
+		sprite->set_texture(tex);
+		sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
+	} else if (!p_options["3d"] && !p_options["animation/import"]) {
+		root = memnew(Sprite);
+		Sprite *sprite = cast_to<Sprite>(root);
+		int32_t frame = p_options["start_frame"];
+		ERR_FAIL_INDEX_V(frame, frames->get_frame_count("default"), FAILED);
+		Ref<Texture> tex = frames->get_frame("default", frame);
+		sprite->set_texture(tex);
+	} else if (p_options["3d"] && p_options["animation/import"]) {
+		root = memnew(AnimatedSprite3D);
+		AnimatedSprite3D *animate_sprite = cast_to<AnimatedSprite3D>(root);
+		if (p_options["animation/begin_playing"]) {
+			animate_sprite->call("_set_playing", true);
+		}
+		animate_sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
+		animate_sprite->set_frame(p_options["start_frame"]);
+		animate_sprite->set_sprite_frames(frames);
+	} else {
+		root = memnew(AnimatedSprite);
+		AnimatedSprite *animate_sprite = cast_to<AnimatedSprite>(root);
+		if (p_options["animation/begin_playing"]) {
+			animate_sprite->call("_set_playing", true);
+		}
+		animate_sprite->set_frame(p_options["start_frame"]);
+		animate_sprite->set_sprite_frames(frames);
+	}
 	Ref<PackedScene> scene;
 	scene.instance();
 	scene->pack(root);
 	String save_path = p_save_path + ".scn";
 	r_gen_files->push_back(save_path);
 	return ResourceSaver::save(save_path, scene);
-}
-
-ResourceImporterLottie::ResourceImporterLottie() {
-}
-
-ResourceImporterLottie::~ResourceImporterLottie() {
 }

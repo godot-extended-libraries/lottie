@@ -61,7 +61,7 @@ public:
 			List<String> *r_gen_files = NULL,
 			Variant *r_metadata = NULL);
 
-	ResourceImporterLottie();
-	~ResourceImporterLottie();
+	ResourceImporterLottie() {}
+	~ResourceImporterLottie() {}
 };
 #endif // RESOURCE_IMPORTER_LOTTIE
