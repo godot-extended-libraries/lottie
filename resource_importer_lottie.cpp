@@ -123,10 +123,10 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
+		img->compress();
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		image_tex->create_from_image(img);
-		img->compress();
 		frames->add_frame(name, image_tex);
 	}
 	Node *root = nullptr;
