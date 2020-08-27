@@ -82,7 +82,6 @@ int ResourceImporterLottie::get_preset_count() const {
 
 Error ResourceImporterLottie::import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
-	Error err;
 	String data;
 	//Backport code
 	//String data = file->get_file_as_string(p_source_file, &err);
@@ -129,20 +128,20 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		if (p_options["compress/video_ram"]) {
-			if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
-				img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
-				img->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
-				img->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else {
-				img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			}
-		}
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		image_tex->create_from_image(img);
+		if (p_options["compress/video_ram"]) {			
+			if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
+				image_tex->get_data()->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
+				image_tex->get_data()->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
+				image_tex->get_data()->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else {
+				image_tex->get_data()->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			}
+		}
 		frames->add_frame(name, image_tex);
 	}
 	Node *root = nullptr;
