@@ -89,7 +89,6 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	Vector<uint8_t> array = file->get_file_as_array(p_source_file);
 	data.parse_utf8((const char *)array.ptr(), array.size());
 	//End backport code
-	ERR_FAIL_COND_V(err != Error::OK, FAILED);
 	std::unique_ptr<rlottie::Animation> lottie =
 			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
 	ERR_FAIL_COND_V(!lottie, FAILED);
