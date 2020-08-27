@@ -45,7 +45,7 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f,1.0f)));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
 }
@@ -91,7 +91,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	lottie->size(width, height);
 	ERR_FAIL_COND_V(!width, FAILED);
 	ERR_FAIL_COND_V(!height, FAILED);
-	Vector2 scale =p_options["scale"];
+	Vector2 scale = p_options["scale"];
 	width *= scale.width;
 	height *= scale.height;
 	ERR_FAIL_COND_V(!width, FAILED);
@@ -134,16 +134,16 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		root = memnew(Sprite3D);
 		Sprite3D *sprite = cast_to<Sprite3D>(root);
 		int32_t frame = p_options["start_frame"];
-		ERR_FAIL_COND_V(frame < frames->get_frame_count("default"), FAILED);
 		Ref<Texture> tex = frames->get_frame("default", frame);
+		ERR_FAIL_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
 		sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
 	} else if (!p_options["3d"] && !p_options["animation/import"]) {
 		root = memnew(Sprite);
 		Sprite *sprite = cast_to<Sprite>(root);
 		int32_t frame = p_options["start_frame"];
-		ERR_FAIL_COND_V(frame < frames->get_frame_count("default"), FAILED);
 		Ref<Texture> tex = frames->get_frame("default", frame);
+		ERR_FAIL_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
 	} else if (p_options["3d"] && p_options["animation/import"]) {
 		root = memnew(AnimatedSprite3D);
