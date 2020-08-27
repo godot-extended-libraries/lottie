@@ -83,7 +83,13 @@ int ResourceImporterLottie::get_preset_count() const {
 Error ResourceImporterLottie::import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
 	Error err;
-	String data = file->get_file_as_string(p_source_file, &err);
+	//String data = file->get_file_as_string(p_source_file, &err);
+	//Backport code
+	Vector<uint8_t> array = file->get_file_as_array(p_source_file);
+	//End backport code
+
+	String data;
+	data.parse_utf8((const char *)array.ptr(), array.size());
 	ERR_FAIL_COND_V(err != Error::OK, FAILED);
 	std::unique_ptr<rlottie::Animation> lottie =
 			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
