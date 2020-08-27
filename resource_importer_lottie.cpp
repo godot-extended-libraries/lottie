@@ -44,6 +44,8 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/video_ram"), true));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
@@ -123,7 +125,17 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		img->compress();
+		if (p_options["compress/video_ram"]) {
+			if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
+				img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
+				img->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
+				img->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			} else {
+				img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+			}
+		}
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		image_tex->create_from_image(img);
