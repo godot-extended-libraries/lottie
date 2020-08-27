@@ -135,7 +135,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Sprite3D *sprite = cast_to<Sprite3D>(root);
 		int32_t frame = p_options["start_frame"];
 		Ref<Texture> tex = frames->get_frame("default", frame);
-		ERR_FAIL_V(tex.is_null(), FAILED);
+		ERR_FAIL_COND_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
 		sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
 	} else if (!p_options["3d"] && !p_options["animation/import"]) {
@@ -143,7 +143,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Sprite *sprite = cast_to<Sprite>(root);
 		int32_t frame = p_options["start_frame"];
 		Ref<Texture> tex = frames->get_frame("default", frame);
-		ERR_FAIL_V(tex.is_null(), FAILED);
+		ERR_FAIL_COND_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
 	} else if (p_options["3d"] && p_options["animation/import"]) {
 		root = memnew(AnimatedSprite3D);
