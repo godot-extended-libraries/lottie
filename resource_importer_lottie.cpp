@@ -46,7 +46,7 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	Dictionary d = Engine::get_singleton()->get_version_info();
-	if (d["major"] == Variant(3) && d["minor"] != Variant(1)) {
+	if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
 		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/video_ram"), true));
 		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	}
@@ -135,7 +135,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		if (d["major"] == Variant(3) && d["minor"] != Variant(1)) {
+		if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
 			if (p_options["compress/video_ram"]) {
 				if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
 					img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
