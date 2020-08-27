@@ -45,6 +45,7 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f,1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
 }
@@ -88,6 +89,11 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	size_t width = 0;
 	size_t height = 0;
 	lottie->size(width, height);
+	ERR_FAIL_COND_V(!width, FAILED);
+	ERR_FAIL_COND_V(!height, FAILED);
+	Vector2 scale =p_options["scale"];
+	width *= scale.width;
+	height *= scale.height;
 	ERR_FAIL_COND_V(!width, FAILED);
 	ERR_FAIL_COND_V(!height, FAILED);
 	Ref<SpriteFrames> frames;
