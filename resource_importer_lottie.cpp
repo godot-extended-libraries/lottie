@@ -44,7 +44,7 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,1024,1,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
 }
