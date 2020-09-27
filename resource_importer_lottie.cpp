@@ -139,6 +139,9 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 			ptr_pixel_write++;
         }
 
+		free(ptr_pixel_read);
+		free(ptr_pixel_write);
+
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
