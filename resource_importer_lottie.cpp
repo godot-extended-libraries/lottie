@@ -47,6 +47,7 @@ void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, i
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	Dictionary d = Engine::get_singleton()->get_version_info();
 	if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
+		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/lossy"), true));
 		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	}
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
@@ -130,7 +131,11 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
+		if (p_options["compress/lossy"]) {
+			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+		} else {
+			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
+		}
 		image_tex->create_from_image(img);
 		frames->add_frame(name, image_tex);
 	}
