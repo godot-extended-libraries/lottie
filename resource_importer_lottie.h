@@ -92,7 +92,12 @@ class VideoStreamPlaybackLottie : public VideoStreamPlayback {
 
 public:
 	VideoStreamPlaybackLottie() {}
-	~VideoStreamPlaybackLottie() {}
+	~VideoStreamPlaybackLottie() {
+		for (int i = 0; i < video_frames.size(); i++) {
+			video_frames.write[i].clear();
+		}
+		video_frames.clear();
+	}
 
 	bool open_data(const String &p_file) {
 		if (p_file.empty()) {
@@ -109,7 +114,6 @@ public:
 
 	virtual void stop() {
 		if (playing) {
-			video_frames.clear();
 			open_data(data); //Should not fail here...
 			video_frames_capacity = video_frames_pos = 0;
 			num_decoded_samples = 0;
@@ -148,7 +152,7 @@ public:
 		return video_pos;
 	}
 	virtual void seek(float p_time) {
-		video_pos = p_time;
+		time = p_time;
 	}
 
 	virtual void set_audio_track(int p_idx) {}
@@ -198,6 +202,10 @@ public:
 				video_frame.resize(width * height);
 			}
 			video_frame = video_frames[video_frames_pos];
+
+			if (video_frames_pos >= lottie->totalFrame()) {
+				break; //Can't demux, EOS?
+			}
 			if (video_frames.size() && video_frames_pos < lottie->totalFrame()) {
 				++video_frames_pos;
 			}
@@ -225,8 +233,8 @@ public:
 			memmove(video_frames.ptrw(), video_frames.ptr() + 1, (--video_frames_pos) * sizeof(void *));
 			video_frames.write[video_frames_pos] = video_frame;
 		}
-		
-		if (video_frames_pos == 0) {
+
+		if (video_frames_pos == 0 && video_frames_pos >= lottie->totalFrame()) {
 			stop();
 		}
 	}
