@@ -111,8 +111,18 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	frames->get_animation_list(&animations);
 	String name = animations[0];
 	frames->set_animation_speed(name, lottie->frameRate());
-	Ref<ImageTexture> image_tex;
-	image_tex.instance();
+	Vector<Ref<ImageTexture>> image_textures;
+	image_textures.resize(lottie->totalFrame());
+	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+		Ref<ImageTexture> tex;
+		tex.instance();
+		if (p_options["compress/lossy"]) {
+			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+		} else {
+			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
+		}
+		image_textures.write[frame_i] = tex;
+	}
 	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
 		Vector<uint32_t> buffer;
 		buffer.resize(width * height);
@@ -131,13 +141,9 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		if (p_options["compress/lossy"]) {
-			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
-		} else {
-			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
-		}
-		image_tex->create_from_image(img);
-		frames->add_frame(name, image_tex->duplicate());
+		Ref<ImageTexture> tex = image_textures.write[frame_i]; 
+		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
+		frames->add_frame(name, tex);
 	}
 	Node *root = nullptr;
 	if (p_options["3d"] && !p_options["animation/import"]) {
