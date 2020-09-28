@@ -61,11 +61,11 @@ bool ResourceImporterLottie::get_option_visibility(const String &p_option, const
 }
 
 String ResourceImporterLottie::get_importer_name() const {
-	return "lottie_sprite";
+	return "video_stream_lottie";
 }
 
 String ResourceImporterLottie::get_visible_name() const {
-	return "Lottie Sprite";
+	return "VideoStream Lottie";
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
@@ -73,11 +73,11 @@ void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extension
 }
 
 String ResourceImporterLottie::get_save_extension() const {
-	return "scn";
+	return "res";
 }
 
 String ResourceImporterLottie::get_resource_type() const {
-	return "PackedScene";
+	return "VideoStream";
 }
 
 int ResourceImporterLottie::get_preset_count() const {
@@ -85,98 +85,149 @@ int ResourceImporterLottie::get_preset_count() const {
 }
 
 Error ResourceImporterLottie::import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
-	FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
-	String data;
-	//Backport code
-	//String data = file->get_file_as_string(p_source_file, &err);
-	Vector<uint8_t> array = file->get_file_as_array(p_source_file);
-	data.parse_utf8((const char *)array.ptr(), array.size());
-	//End backport code
-	std::unique_ptr<rlottie::Animation> lottie =
-			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
-	ERR_FAIL_COND_V(!lottie, FAILED);
-	size_t width = 0;
-	size_t height = 0;
-	lottie->size(width, height);
-	ERR_FAIL_COND_V(!width, FAILED);
-	ERR_FAIL_COND_V(!height, FAILED);
+	// FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
+	// String data;
+	// //Backport code
+	// //String data = file->get_file_as_string(p_source_file, &err);
+	// Vector<uint8_t> array = file->get_file_as_array(p_source_file);
+	// data.parse_utf8((const char *)array.ptr(), array.size());
+	// //End backport code
+	// std::unique_ptr<rlottie::Animation> lottie =
+	// 		rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
+	// ERR_FAIL_COND_V(!lottie, FAILED);
+	// size_t width = 0;
+	// size_t height = 0;
+	// lottie->size(width, height);
+	// ERR_FAIL_COND_V(!width, FAILED);
+	// ERR_FAIL_COND_V(!height, FAILED);
+	// Vector2 scale = p_options["scale"];
+	// width *= scale.width;
+	// height *= scale.height;
+	// ERR_FAIL_COND_V(!width, FAILED);
+	// ERR_FAIL_COND_V(!height, FAILED);
+	// Ref<SpriteFrames> frames;
+	// frames.instance();
+	// List<StringName> animations;
+	// frames->get_animation_list(&animations);
+	// String name = animations[0];
+	// frames->set_animation_speed(name, lottie->frameRate());
+	// for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+	// 	Vector<uint32_t> buffer;
+	// 	buffer.resize(width * height);
+	// 	rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
+	// 	lottie->renderSync(frame_i, surface);
+	// 	PoolByteArray pixels;
+	// 	int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
+	// 	pixels.resize(buffer_byte_size);
+	// 	PoolByteArray::Write pixel_write = pixels.write();
+	// 	memcpy(pixel_write.ptr(), buffer.ptr(), buffer_byte_size);
+	// 	uint8_t *ptr_pixel_write = pixel_write.ptr();
+	// 	for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
+	// 		SWAP(ptr_pixel_write[pixel_i + 2], ptr_pixel_write[pixel_i + 0]);
+	// 	}
+	// 	Ref<Image> img;
+	// 	img.instance();
+	// 	img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
+	// 	Ref<ImageTexture> image_tex;
+	// 	image_tex.instance();
+	// 	Dictionary d = Engine::get_singleton()->get_version_info();
+	// 	if (p_options["compress/lossy"]) {
+	// 		image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+	// 	} else {
+	// 		image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
+	// 	}
+	// 	image_tex->create_from_image(img);
+	// 	frames->add_frame(name, image_tex);
+	// }
+	// Node *root = nullptr;
+	// if (p_options["3d"] && !p_options["animation/import"]) {
+	// 	root = memnew(Sprite3D);
+	// 	Sprite3D *sprite = cast_to<Sprite3D>(root);
+	// 	int32_t frame = p_options["start_frame"];
+	// 	Ref<Texture> tex = frames->get_frame("default", frame);
+	// 	ERR_FAIL_COND_V(tex.is_null(), FAILED);
+	// 	sprite->set_texture(tex);
+	// 	sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
+	// } else if (!p_options["3d"] && !p_options["animation/import"]) {
+	// 	root = memnew(Sprite);
+	// 	Sprite *sprite = cast_to<Sprite>(root);
+	// 	int32_t frame = p_options["start_frame"];
+	// 	Ref<Texture> tex = frames->get_frame("default", frame);
+	// 	ERR_FAIL_COND_V(tex.is_null(), FAILED);
+	// 	sprite->set_texture(tex);
+	// } else if (p_options["3d"] && p_options["animation/import"]) {
+	// 	root = memnew(AnimatedSprite3D);
+	// 	AnimatedSprite3D *animate_sprite = cast_to<AnimatedSprite3D>(root);
+	// 	if (p_options["animation/begin_playing"]) {
+	// 		animate_sprite->call("_set_playing", true);
+	// 	}
+	// 	animate_sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
+	// 	animate_sprite->set_frame(p_options["start_frame"]);
+	// 	animate_sprite->set_sprite_frames(frames);
+	// } else {
+	// 	root = memnew(AnimatedSprite);
+	// 	AnimatedSprite *animate_sprite = cast_to<AnimatedSprite>(root);
+	// 	if (p_options["animation/begin_playing"]) {
+	// 		animate_sprite->call("_set_playing", true);
+	// 	}
+	// 	animate_sprite->set_frame(p_options["start_frame"]);
+	// 	animate_sprite->set_sprite_frames(frames);
+	// }
+	// Ref<PackedScene> scene;
+	// scene.instance();
+	// scene->pack(root);
+	// String save_path = p_save_path + ".scn";
+	// r_gen_files->push_back(save_path);
+	FileAccess *f = FileAccess::open(p_source_file, FileAccess::READ);
+	if (!f) {
+		return ERR_CANT_OPEN;
+	}
+
+	VideoStreamLottie *stream = memnew(VideoStreamLottie);
+
 	Vector2 scale = p_options["scale"];
-	width *= scale.width;
-	height *= scale.height;
-	ERR_FAIL_COND_V(!width, FAILED);
-	ERR_FAIL_COND_V(!height, FAILED);
-	Ref<SpriteFrames> frames;
-	frames.instance();
-	List<StringName> animations;
-	frames->get_animation_list(&animations);
-	String name = animations[0];
-	frames->set_animation_speed(name, lottie->frameRate());
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
-		Vector<uint32_t> buffer;
-		buffer.resize(width * height);
-		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
-		lottie->renderSync(frame_i, surface);
-		PoolByteArray pixels;
-		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
-		pixels.resize(buffer_byte_size);
-		PoolByteArray::Write pixel_write = pixels.write();
-		memcpy(pixel_write.ptr(), buffer.ptr(), buffer_byte_size);
-		uint8_t *ptr_pixel_write = pixel_write.ptr();
-		for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
-			SWAP(ptr_pixel_write[pixel_i + 2], ptr_pixel_write[pixel_i + 0]);
-		}
-		Ref<Image> img;
-		img.instance();
-		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		Ref<ImageTexture> image_tex;
-		image_tex.instance();
-		Dictionary d = Engine::get_singleton()->get_version_info();
-		if (p_options["compress/lossy"]) {
-			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
-		} else {
-			image_tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
-		}
-		image_tex->create_from_image(img);
-		frames->add_frame(name, image_tex);
-	}
-	Node *root = nullptr;
-	if (p_options["3d"] && !p_options["animation/import"]) {
-		root = memnew(Sprite3D);
-		Sprite3D *sprite = cast_to<Sprite3D>(root);
-		int32_t frame = p_options["start_frame"];
-		Ref<Texture> tex = frames->get_frame("default", frame);
-		ERR_FAIL_COND_V(tex.is_null(), FAILED);
-		sprite->set_texture(tex);
-		sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
-	} else if (!p_options["3d"] && !p_options["animation/import"]) {
-		root = memnew(Sprite);
-		Sprite *sprite = cast_to<Sprite>(root);
-		int32_t frame = p_options["start_frame"];
-		Ref<Texture> tex = frames->get_frame("default", frame);
-		ERR_FAIL_COND_V(tex.is_null(), FAILED);
-		sprite->set_texture(tex);
-	} else if (p_options["3d"] && p_options["animation/import"]) {
-		root = memnew(AnimatedSprite3D);
-		AnimatedSprite3D *animate_sprite = cast_to<AnimatedSprite3D>(root);
-		if (p_options["animation/begin_playing"]) {
-			animate_sprite->call("_set_playing", true);
-		}
-		animate_sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
-		animate_sprite->set_frame(p_options["start_frame"]);
-		animate_sprite->set_sprite_frames(frames);
-	} else {
-		root = memnew(AnimatedSprite);
-		AnimatedSprite *animate_sprite = cast_to<AnimatedSprite>(root);
-		if (p_options["animation/begin_playing"]) {
-			animate_sprite->call("_set_playing", true);
-		}
-		animate_sprite->set_frame(p_options["start_frame"]);
-		animate_sprite->set_sprite_frames(frames);
-	}
-	Ref<PackedScene> scene;
-	scene.instance();
-	scene->pack(root);
-	String save_path = p_save_path + ".scn";
-	r_gen_files->push_back(save_path);
-	return ResourceSaver::save(save_path, scene);
+	Error err;
+	String data = f->get_file_as_string(p_source_file, &err);
+	ERR_FAIL_COND_V(err != OK, FAILED);
+	stream->set_data(data);
+	stream->set_scale(scale);
+
+	Ref<VideoStreamLottie> lottie_stream = Ref<VideoStreamLottie>(stream);
+	f->close();
+	memdelete(f);
+	String save_path = p_save_path + ".res";
+	return ResourceSaver::save(save_path, lottie_stream);
 }
+
+void VideoStreamLottie::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_data", "data"), &VideoStreamLottie::set_data);
+	ClassDB::bind_method(D_METHOD("get_data"), &VideoStreamLottie::get_data);
+	ClassDB::bind_method(D_METHOD("set_scale", "scale"), &VideoStreamLottie::set_scale);
+	ClassDB::bind_method(D_METHOD("get_scale"), &VideoStreamLottie::get_scale);
+
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "scale", PROPERTY_HINT_NONE), "set_scale", "get_scale");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "data", PROPERTY_HINT_NONE), "set_data", "get_data");
+}
+
+VideoStreamLottie::VideoStreamLottie() {}
+
+Ref<VideoStreamPlayback> VideoStreamLottie::instance_playback() {
+	Ref<VideoStreamPlaybackLottie> pb = memnew(VideoStreamPlaybackLottie);
+	if (pb->open_data(data))
+		return pb;
+	return NULL;
+}
+
+void VideoStreamLottie::set_data(const String &p_file) {
+	data = p_file;
+}
+String VideoStreamLottie::get_data() {
+	return data;
+}
+void VideoStreamLottie::set_scale(Vector2 p_scale) {
+	scale = p_scale;
+}
+Vector2 VideoStreamLottie::get_scale() const {
+	return scale;
+}
+void VideoStreamLottie::set_audio_track(int p_track) {}
