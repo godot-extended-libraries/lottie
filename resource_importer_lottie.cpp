@@ -51,6 +51,7 @@ void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, i
 		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	}
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "skip_frames", PROPERTY_HINT_RANGE, "0,10,0.2,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
@@ -110,10 +111,13 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	List<StringName> animations;
 	frames->get_animation_list(&animations);
 	String name = animations[0];
-	frames->set_animation_speed(name, lottie->frameRate());
-	Vector<Ref<ImageTexture>> image_textures;
-	image_textures.resize(lottie->totalFrame());
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+	double_t skip_frames = p_options["skip_frames"];
+	frames->set_animation_speed(name, lottie->frameRate() / (1.0 + skip_frames));
+	Vector<Ref<ImageTexture> > image_textures;
+
+	int godot_frame_count = (int) (lottie->totalFrame() / (1.0 + skip_frames)) + 1;
+	image_textures.resize(godot_frame_count);
+	for (int32_t frame_godot = 0; frame_godot < godot_frame_count; frame_godot++) {
 		Ref<ImageTexture> tex;
 		tex.instance();
 		if (p_options["compress/lossy"]) {
@@ -121,13 +125,20 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		} else {
 			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
 		}
-		image_textures.write[frame_i] = tex;
+		image_textures.write[frame_godot] = tex;
 	}
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+
+	float unskipped = 0;
+	int frame_godot = 0;
+	for (int32_t frame_lottie = 0; frame_lottie < lottie->totalFrame(); frame_lottie++) {
+		int skipped_frames = (int)floor(unskipped);
+		frame_lottie += skipped_frames;
+		unskipped -= skipped_frames;
+
 		Vector<uint32_t> buffer;
 		buffer.resize(width * height);
 		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
-		lottie->renderSync(frame_i, surface);
+		lottie->renderSync(frame_lottie, surface);
 		PoolByteArray pixels;
 		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
 		pixels.resize(buffer_byte_size);
@@ -141,9 +152,12 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		Ref<ImageTexture> tex = image_textures.write[frame_i]; 
+		Ref<ImageTexture> tex = image_textures.write[frame_godot];
 		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
 		frames->add_frame(name, tex);
+
+		unskipped += skip_frames;
+		frame_godot++;
 	}
 	Node *root = nullptr;
 	if (p_options["3d"] && !p_options["animation/import"]) {
