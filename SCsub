@@ -12,8 +12,9 @@ env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector'])
 env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/freetype'])
 env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/stb'])
 
-env_lottie.Append(CCDEFINES=["RLOTTIE_BUILD"])
 env_lottie.Append(CPPDEFINES=["RLOTTIE_BUILD"])
+env_lottie.Append(CPPDEFINES=["__CYGWIN__=0"])
+env_lottie.Append(CPPDEFINES=["_WIN32=0"])
 
 env_thirdparty = env_lottie.Clone()
 # env_thirdparty.disable_warnings()
