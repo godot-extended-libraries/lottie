@@ -15,7 +15,7 @@ env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/stb'])
 env_lottie.Append(CPPDEFINES=["RLOTTIE_BUILD"])
 
 env_thirdparty = env_lottie.Clone()
-# env_thirdparty.disable_warnings()
+env_thirdparty.disable_warnings()
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/lottie/*.cpp")
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/*.cpp")
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
