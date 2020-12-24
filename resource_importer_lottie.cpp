@@ -30,12 +30,14 @@
 
 #include "resource_importer_lottie.h"
 
-#include "core/bind/core_bind.h"
+#include "core/core_bind.h"
 #include "core/io/file_access_pack.h"
-#include "scene/2d/animated_sprite.h"
-#include "scene/2d/sprite.h"
+#include "scene/2d/animated_sprite_2d.h"
+#include "scene/2d/sprite_2d.h"
 #include "scene/3d/sprite_3d.h"
 
+#pragma warning( push )
+#pragma warning( disable : 4251 ) 
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
 #include <climits>
@@ -47,12 +49,8 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	Dictionary d = Engine::get_singleton()->get_version_info();
-	if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
-		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/lossy"), true));
-		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
-	}
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "skip_frames", PROPERTY_HINT_RANGE, "0,10,0.2,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "skip_frames", PROPERTY_HINT_RANGE, "0,10,0.2,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
@@ -121,11 +119,6 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	for (int32_t frame_godot = 0; frame_godot < godot_frame_count; frame_godot++) {
 		Ref<ImageTexture> tex;
 		tex.instance();
-		if (p_options["compress/lossy"]) {
-			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
-		} else {
-			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
-		}
 		image_textures.write[frame_godot] = tex;
 	}
 
@@ -141,12 +134,11 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		buffer.resize(width * height);
 		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
 		lottie->renderSync(frame_lottie, surface);
-		PoolByteArray pixels;
+		PackedByteArray pixels;
 		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
 		pixels.resize(buffer_byte_size);
-		PoolByteArray::Write pixel_write = pixels.write();
-		memcpy(pixel_write.ptr(), buffer.ptr(), buffer_byte_size);
-		uint8_t *ptr_pixel_write = pixel_write.ptr();
+		memcpy(pixels.ptrw(), buffer.ptr(), buffer_byte_size);
+		uint8_t *ptr_pixel_write = pixels.ptrw();
 		for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
 			SWAP(ptr_pixel_write[pixel_i + 2], ptr_pixel_write[pixel_i + 0]);
 		}
@@ -155,7 +147,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
 		Ref<ImageTexture> tex = image_textures.write[frame_godot];
-		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
+		tex->create_from_image(img);
 		frames->add_frame(name, tex);
 
 		unskipped += skip_frames;
@@ -171,8 +163,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		sprite->set_texture(tex);
 		sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
 	} else if (!p_options["3d"] && !p_options["animation/import"]) {
-		root = memnew(Sprite);
-		Sprite *sprite = cast_to<Sprite>(root);
+		root = memnew(Sprite2D);
+		Sprite2D *sprite = cast_to<Sprite2D>(root);
 		int32_t frame = p_options["start_frame"];
 		Ref<Texture> tex = frames->get_frame("default", frame);
 		ERR_FAIL_COND_V(tex.is_null(), FAILED);
@@ -187,8 +179,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		animate_sprite->set_frame(p_options["start_frame"]);
 		animate_sprite->set_sprite_frames(frames);
 	} else {
-		root = memnew(AnimatedSprite);
-		AnimatedSprite *animate_sprite = cast_to<AnimatedSprite>(root);
+		root = memnew(AnimatedSprite2D);
+		AnimatedSprite2D *animate_sprite = cast_to<AnimatedSprite2D>(root);
 		if (p_options["animation/begin_playing"]) {
 			animate_sprite->call("_set_playing", true);
 		}
