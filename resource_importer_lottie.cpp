@@ -36,8 +36,10 @@
 #include "scene/2d/sprite_2d.h"
 #include "scene/3d/sprite_3d.h"
 
+#if _MSC_VER && !__INTEL_COMPILER
 #pragma warning( push )
 #pragma warning( disable : 4251 ) 
+#endif
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
 #include <climits>
