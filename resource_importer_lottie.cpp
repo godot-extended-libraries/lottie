@@ -128,6 +128,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		} else {
 			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
 		}
+		ERR_CONTINUE(frame_godot >= image_textures.size());
 		image_textures.write[frame_godot] = tex;
 	}
 
@@ -156,6 +157,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
+		ERR_CONTINUE(frame_godot >= image_textures.size());
 		Ref<ImageTexture> tex = image_textures.write[frame_godot];
 		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
 		frames->add_frame(name, tex);
