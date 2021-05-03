@@ -138,7 +138,13 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		img->generate_mipmaps();
-		Dictionary d = Engine::get_singleton()->get_version_info();
+		bool can_bptc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_bptc");
+		bool can_s3tc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_s3tc");
+		if (can_bptc || can_s3tc) {
+			img->compress(Image::COMPRESS_S3TC);
+		} else if (ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_etc2")) {
+			img->compress(Image::COMPRESS_ETC2);
+		}
 		Ref<ImageTexture> tex;
 		tex.instance();
 		tex->create_from_image(img);
