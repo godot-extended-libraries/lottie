@@ -35,10 +35,11 @@
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/sprite_2d.h"
 #include "scene/3d/sprite_3d.h"
+#include <stdint.h>
 
 #if _MSC_VER && !__INTEL_COMPILER
-#pragma warning( push )
-#pragma warning( disable : 4251 ) 
+#pragma warning(push)
+#pragma warning(disable : 4251)
 #endif
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
@@ -51,8 +52,8 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	Dictionary d = Engine::get_singleton()->get_version_info();
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "skip_frames", PROPERTY_HINT_RANGE, "0,10,0.2,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "start_time", PROPERTY_HINT_RANGE, "0,65536,0.01,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "frame_rate", PROPERTY_HINT_RANGE, "1,65536,1,or_greater"), 15));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
@@ -112,30 +113,19 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	List<StringName> animations;
 	frames->get_animation_list(&animations);
 	String name = animations[0];
-	double_t skip_frames = p_options["skip_frames"];
-	frames->set_animation_speed(name, lottie->frameRate() / (1.0 + skip_frames));
+	double_t frame_rate = p_options["frame_rate"];
+	frames->set_animation_speed(name, frame_rate);
 	Vector<Ref<ImageTexture> > image_textures;
-
-	int godot_frame_count = (int) (lottie->totalFrame() / (1.0 + skip_frames)) + 1;
-	image_textures.resize(godot_frame_count);
-	for (int32_t frame_godot = 0; frame_godot < godot_frame_count; frame_godot++) {
-		Ref<ImageTexture> tex;
-		tex.instance();
-		image_textures.write[frame_godot] = tex;
-	}
-
-	float unskipped = 0;
-	int32_t frame_godot = 0;
-	int32_t total_frame = MIN(lottie->totalFrame(), INT_MAX);
-	for (int32_t frame_lottie = 0; frame_lottie < total_frame; frame_lottie++) {
-		int skipped_frames = (int)floor(unskipped);
-		frame_lottie += skipped_frames;
-		unskipped -= skipped_frames;
-
+	const double increment = 1.0 / frame_rate;
+	double time = p_options["start_time"];
+	bool last = false;
+	double length = lottie->totalFrame() / lottie->frameRate();
+	while (true) {
 		Vector<uint32_t> buffer;
 		buffer.resize(width * height);
 		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
-		lottie->renderSync(frame_lottie, surface);
+		int64_t original_frame = floor(time * lottie->frameRate());
+		lottie->renderSync(original_frame, surface);
 		PackedByteArray pixels;
 		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
 		pixels.resize(buffer_byte_size);
@@ -148,13 +138,21 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		Ref<ImageTexture> tex = image_textures.write[frame_godot];
+		Ref<ImageTexture> tex;
+		tex.instance();
 		tex->create_from_image(img);
 		frames->add_frame(name, tex);
-
-		unskipped += skip_frames;
-		frame_godot++;
+		image_textures.push_back(tex);
+		if (last) {
+			break;
+		}
+		time += increment;
+		if (time >= length) {
+			last = true;
+			time = length;
+		}
 	}
+
 	Node *root = nullptr;
 	if (p_options["3d"] && !p_options["animation/import"]) {
 		root = memnew(Sprite3D);
