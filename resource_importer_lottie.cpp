@@ -137,7 +137,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		img->resize_to_po2(true);
+		img->resize_to_po2();
 		img->generate_mipmaps();
 		bool can_bptc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_bptc");
 		bool can_s3tc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_s3tc");
