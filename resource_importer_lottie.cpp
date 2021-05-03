@@ -137,6 +137,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
+		img->resize_po2();
 		img->generate_mipmaps();
 		Ref<ImageTexture> tex;
 		tex.instance();
