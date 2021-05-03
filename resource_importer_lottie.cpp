@@ -137,15 +137,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		img->resize_to_po2();
 		img->generate_mipmaps();
-		bool can_bptc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_bptc");
-		bool can_s3tc = ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_s3tc");
-		if (can_bptc || can_s3tc) {
-			img->compress(Image::COMPRESS_S3TC);
-		} else if (ProjectSettings::get_singleton()->get("rendering/textures/vram_compression/import_etc2")) {
-			img->compress(Image::COMPRESS_ETC2);
-		}
 		Ref<ImageTexture> tex;
 		tex.instance();
 		tex->create_from_image(img);
@@ -199,5 +191,5 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	scene->pack(root);
 	String save_path = p_save_path + ".scn";
 	r_gen_files->push_back(save_path);
-	return ResourceSaver::save(save_path, scene);
+	return ResourceSaver::save(save_path, scene, ResourceSaver::FLAG_COMPRESS);
 }
