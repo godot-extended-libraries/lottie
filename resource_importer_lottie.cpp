@@ -90,11 +90,8 @@ int ResourceImporterLottie::get_preset_count() const {
 Error ResourceImporterLottie::import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
 	String data;
-	//Backport code
-	//String data = file->get_file_as_string(p_source_file, &err);
 	Vector<uint8_t> array = file->get_file_as_array(p_source_file);
 	data.parse_utf8((const char *)array.ptr(), array.size());
-	//End backport code
 	std::unique_ptr<rlottie::Animation> lottie =
 			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
 	ERR_FAIL_COND_V(!lottie, FAILED);
@@ -112,6 +109,8 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	frames.instance();
 	List<StringName> animations;
 	frames->get_animation_list(&animations);
+	ERR_FAIL_COND_V(!height, FAILED);
+	ERR_FAIL_INDEX_V(0, animations.size(), FAILED);
 	String name = animations[0];
 	double_t frame_rate = p_options["frame_rate"];
 	frames->set_animation_speed(name, frame_rate);
@@ -138,6 +137,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
+		img->generate_mipmaps();
 		Dictionary d = Engine::get_singleton()->get_version_info();
 		Ref<ImageTexture> tex;
 		tex.instance();
@@ -177,7 +177,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 			animate_sprite->call("_set_playing", true);
 		}
 		animate_sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
-		animate_sprite->set_frame(p_options["start_frame"]);
+		animate_sprite->set_frame(p_options["start_time"]);
 		animate_sprite->set_sprite_frames(frames);
 	} else {
 		root = memnew(AnimatedSprite2D);
@@ -185,7 +185,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		if (p_options["animation/begin_playing"]) {
 			animate_sprite->call("_set_playing", true);
 		}
-		animate_sprite->set_frame(p_options["start_frame"]);
+		animate_sprite->set_frame(p_options["start_time"]);
 		animate_sprite->set_sprite_frames(frames);
 	}
 	Ref<PackedScene> scene;
