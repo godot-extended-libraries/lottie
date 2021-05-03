@@ -116,7 +116,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	frames->set_animation_speed(name, frame_rate);
 	Vector<Ref<ImageTexture> > image_textures;
 	const double increment = 1.0 / frame_rate;
-	double time = p_options["start_time"];
+	double time = 0.0;
 	bool last = false;
 	double length = lottie->totalFrame() / lottie->frameRate();
 	time = CLAMP(time, 0.0, length);
@@ -162,10 +162,10 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	}
 
 	Node *root = nullptr;
+	int64_t frame = CLAMP(double(p_options["start_time"]) * lottie->frameRate(), 0, lottie->frameRate());
 	if (p_options["3d"] && !p_options["animation/import"]) {
 		root = memnew(Sprite3D);
 		Sprite3D *sprite = cast_to<Sprite3D>(root);
-		int32_t frame = p_options["start_frame"];
 		Ref<Texture> tex = frames->get_frame("default", frame);
 		ERR_FAIL_COND_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
@@ -173,7 +173,6 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	} else if (!p_options["3d"] && !p_options["animation/import"]) {
 		root = memnew(Sprite2D);
 		Sprite2D *sprite = cast_to<Sprite2D>(root);
-		int32_t frame = p_options["start_frame"];
 		Ref<Texture> tex = frames->get_frame("default", frame);
 		ERR_FAIL_COND_V(tex.is_null(), FAILED);
 		sprite->set_texture(tex);
@@ -184,7 +183,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 			animate_sprite->call("_set_playing", true);
 		}
 		animate_sprite->set_draw_flag(SpriteBase3D::FLAG_SHADED, true);
-		animate_sprite->set_frame(p_options["start_time"]);
+		animate_sprite->set_frame(frame);
 		animate_sprite->set_sprite_frames(frames);
 	} else {
 		root = memnew(AnimatedSprite2D);
@@ -192,7 +191,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		if (p_options["animation/begin_playing"]) {
 			animate_sprite->call("_set_playing", true);
 		}
-		animate_sprite->set_frame(p_options["start_time"]);
+		animate_sprite->set_frame(frame);
 		animate_sprite->set_sprite_frames(frames);
 	}
 	Ref<PackedScene> scene;
