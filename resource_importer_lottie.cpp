@@ -120,6 +120,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	double time = p_options["start_time"];
 	bool last = false;
 	double length = lottie->totalFrame() / lottie->frameRate();
+	time = CLAMP(time, 0.0, length);
 	while (true) {
 		Vector<uint32_t> buffer;
 		buffer.resize(width * height);
