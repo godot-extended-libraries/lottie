@@ -36,8 +36,8 @@
 #include "scene/2d/sprite.h"
 #include "scene/3d/sprite_3d.h"
 
-#pragma warning( push )
-#pragma warning( disable : 4251 ) 
+#pragma warning(push)
+#pragma warning(disable : 4251)
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
 #include <climits>
@@ -118,7 +118,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	frames->set_animation_speed(name, lottie->frameRate() / (1.0 + skip_frames));
 	Vector<Ref<ImageTexture> > image_textures;
 
-	int godot_frame_count = (int) (lottie->totalFrame() / (1.0 + skip_frames)) + 1;
+	int godot_frame_count = (int)(lottie->totalFrame() / (1.0 + skip_frames)) + 1;
 	image_textures.resize(godot_frame_count);
 	for (int32_t frame_godot = 0; frame_godot < godot_frame_count; frame_godot++) {
 		Ref<ImageTexture> tex;
