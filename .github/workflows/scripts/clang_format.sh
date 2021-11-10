@@ -12,7 +12,7 @@ CLANG_FORMAT_FILE_EXTS=(".c" ".h" ".cpp" ".hpp" ".cc" ".hh" ".cxx" ".m" ".mm" ".
 git grep -zIl '' |
 while IFS= read -rd '' f; do
     # Exclude 3rd party files.
-    elif [[ "$f" == "thirdparty"* ]]; then
+    if [[ "$f" == "thirdparty"* ]]; then
         continue
     elif [[ "$f" == ".github"* ]]; then
         continue

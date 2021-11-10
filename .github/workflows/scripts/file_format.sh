@@ -15,7 +15,9 @@ IFS=$'\n\t'
 git grep -zIl '' |
 while IFS= read -rd '' f; do
     # Exclude 3rd party files
-    elif [[ "$f" == "thirdparty"* ]]; then
+    if [[ "$f" == "thirdparty"* ]]; then
+        continue
+    elif [[ "$f" == ".github"* ]]; then
         continue
     fi
     # Ensure that files are UTF-8 formatted.
