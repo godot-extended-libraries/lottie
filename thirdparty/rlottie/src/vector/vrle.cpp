@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <limits>
 #include "vdebug.h"
 #include "vglobal.h"
 
