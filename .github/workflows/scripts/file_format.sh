@@ -15,21 +15,7 @@ IFS=$'\n\t'
 git grep -zIl '' |
 while IFS= read -rd '' f; do
     # Exclude 3rd party files
-    if [[ "$f" == "glad"* ]]; then
-        continue
-    elif [[ "$f" == "godot-cpp"* ]]; then
-        continue
-    elif [[ "$f" == "demo/addons/godot-xr-tools"* ]]; then
-        continue
-    elif [[ "$f" == "openxr_loader"* ]]; then
-        continue
-    elif [[ "$f" == "gradle"* ]]; then
-        continue
-    elif [[ "$f" == "build"* ]]; then
-        continue
-    elif [[ "$f" == "android"* ]]; then
-        continue
-    elif [[ "$f" == "api.json" ]]; then
+    elif [[ "$f" == "thirdparty"* ]]; then
         continue
     fi
     # Ensure that files are UTF-8 formatted.
